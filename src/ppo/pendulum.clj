@@ -1,27 +1,34 @@
 (ns ppo.pendulum
     (:gen-class)
-    (:require [clojure.math :refer (to-radians)]
+    (:require [clojure.math :refer (to-radians sin)]
               [quil.core :as q]
               [quil.middleware :as m])
     (:import [java.util.concurrent CountDownLatch]))
 
 (defn setup []
-  {:angle 0.0
+  {:angle 1.0
    :angle-velocity 0.0
    :length 200
    :origin [(/ (q/width) 2) (/ (q/height) 2)]
-   :gravity 0.4})
+   :motor 20.0
+   :friction 0.02
+   :gravity 5.0})
 
 (defn update-state [state]
   (let [mouse-x (q/mouse-x)
         [origin-x _origin-y] (:origin state)
         diff (- mouse-x origin-x)
-        angle-acceleration (to-radians (* 10 (/ diff origin-x)))
-        dt (/ 1.0 60.0)]
+        motor-acceleration (to-radians (* (:motor state) (/ diff origin-x)))
+        friction-acceleration (- (* (:angle-velocity state) (:friction state)))
+        gravity-acceleration (- (* (:gravity state) (sin (:angle state))))
+        acceleration (+ gravity-acceleration motor-acceleration friction-acceleration)
+        dt (/ 1.0 60.0)
+        angle-velocity (+ (:angle-velocity state) (* dt acceleration))
+        angle (+ (:angle state) (* dt angle-velocity))]
     (q/frame-rate 60)
-    (-> state
-        (update :angle-velocity #(+ % (* dt angle-acceleration)))
-        (update :angle #(+ % (* dt (:angle-velocity state)))))))
+    (assoc state
+           :angle-velocity angle-velocity
+           :angle angle)))
 
 (defn draw-state [{:keys [angle length origin]}]
   (q/background 255)
