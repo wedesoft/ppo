@@ -1,0 +1,4 @@
+{:deps
+ {org.clojure/clojure {:mvn/version "1.12.4"}
+  org.encog/encog-core {:mvn/version "3.4"}}
+ :paths ["src"]}
