@@ -68,6 +68,31 @@
       :velocity velocity})))
 
 
+(defn state->array
+  "Convert state to array"
+  [{:keys [angle velocity]}]
+  (double-array [angle velocity]))
+
+
+(defn array->state
+  "Convert array to state"
+  [array]
+  {:angle    (aget array 0)
+   :velocity (aget array 1)})
+
+
+(defn action->array
+  "Convert action to array"
+  [{:keys [control]}]
+  (double-array [control]))
+
+
+(defn array->action
+  "Convert array to action"
+  [array]
+  {:control (aget array 0)})
+
+
 (defn draw-state [{:keys [angle]}]
   (let [origin-x   (/ (q/width) 2)
         origin-y   (/ (q/height) 2)

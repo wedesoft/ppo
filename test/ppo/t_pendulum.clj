@@ -53,3 +53,17 @@
        => {:angle (- (/ PI 2) 9.81) :velocity -9.81}
        (update-state {:angle 0.0 :velocity 0.0} {:control 1.0} {:dt 1.0 :friction 0.0 :gravitation 9.81 :length 1.0 :motor 2.0})
        => {:angle 2.0 :velocity 2.0})
+
+
+(facts "Convert state vector to array and back"
+       (seq (state->array {:angle 0.0 :velocity 0.0})) => [0.0 0.0]
+       (seq (state->array {:angle 0.25 :velocity 0.5})) => [0.25 0.5]
+       (array->state (double-array [0.0 0.0])) => {:angle 0.0 :velocity 0.0}
+       (array->state (double-array [0.25 0.5])) => {:angle 0.25 :velocity 0.5})
+
+
+(facts "Convert action to array and back"
+       (seq (action->array {:control 0.0})) => [0.0]
+       (seq (action->array {:control 0.5})) => [0.5]
+       (array->action (double-array [0.0])) => {:control 0.0}
+       (array->action (double-array [0.5])) => {:control 0.5})
