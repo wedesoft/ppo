@@ -1,53 +1,106 @@
 (ns ppo.pendulum
     (:gen-class)
-    (:require [clojure.math :refer (to-radians sin)]
+    (:require [clojure.math :refer (to-radians cos sin)]
               [clojure.core.async :as async]
               [quil.core :as q]
               [quil.middleware :as m])
     (:import [java.util.concurrent CountDownLatch]))
 
-(defn setup []
-  {:angle 1.0
-   :angle-velocity 0.0
-   :length 200
-   :origin [(/ (q/width) 2) (/ (q/height) 2)]
-   :motor 20.0
-   :friction 0.02
-   :gravity 5.0})
 
-(defn update-state [state]
-  (let [mouse-x (q/mouse-x)
-        [origin-x _origin-y] (:origin state)
-        diff (- mouse-x origin-x)
-        motor-acceleration (to-radians (* (:motor state) (/ diff origin-x)))
-        friction-acceleration (- (* (:angle-velocity state) (:friction state)))
-        gravity-acceleration (- (* (:gravity state) (sin (:angle state))))
-        acceleration (+ gravity-acceleration motor-acceleration friction-acceleration)
-        dt (/ 1.0 60.0)
-        angle-velocity (+ (:angle-velocity state) (* dt acceleration))
-        angle (+ (:angle state) (* dt angle-velocity))]
-    (q/frame-rate 60)
-    (assoc state
-           :angle-velocity angle-velocity
-           :angle angle)))
+(def frame-rate 25)
 
-(defn draw-state [{:keys [angle length origin]}]
-  (q/background 255)
-  (let [[origin-x origin-y] origin
-        x (+ origin-x (* length (Math/sin angle)))
-        y (+ origin-y (* length (Math/cos angle)))]
+
+(def config
+  {:length  0.8
+   :friction 0.1
+   :motor 2.0
+   :gravitation 9.81
+   :dt (/ 1.0 frame-rate)
+   :save false})
+
+
+(defn setup
+  "Initialise pendulum"
+  [angle]
+  {:angle    angle
+   :velocity 0.0})
+
+
+(defn pendulum-gravity
+  "Determine angular acceleration due to gravity"
+  [gravitation length angle]
+  (/ (* (sin angle) (- gravitation)) length))
+
+
+(defn motor-acceleration
+  "Angular acceleration from motor"
+  [control motor-acceleration]
+  (* control motor-acceleration))
+
+
+(defn sign
+  "Get sign of number"
+  [x]
+  (cond
+    (pos? x) 1
+    (neg? x) -1
+    :else 0))
+
+
+(defn friction-acceleration
+  "Angular acceleration due to friction"
+  [friction velocity dt]
+  (* (min friction (/ (abs velocity) dt)) (- (sign velocity))))
+
+
+(defn update-state
+  "Perform simulation step of pendulum"
+  ([state action]
+   (update-state state action config))
+  ([{:keys [angle velocity]} {:keys [control]} {:keys [dt friction motor gravitation length]}]
+   (let [friction     (friction-acceleration friction velocity dt)
+         gravity      (pendulum-gravity gravitation length angle)
+         motor        (motor-acceleration control motor)
+         acceleration (+ motor gravity friction)
+         velocity     (+ velocity (* acceleration dt))
+         angle        (+ angle (* velocity dt))]
+     {:angle    angle
+      :velocity velocity})))
+
+
+(defn draw-state [{:keys [angle]}]
+  (let [origin-x   (/ (q/width) 2)
+        origin-y   (/ (q/height) 2)
+        length     (* 0.5 (q/height) (:length config))
+        pendulum-x (+ origin-x (* length (sin angle)))
+        pendulum-y (+ origin-y (* length (cos angle)))
+        size       (* 0.05 (q/height))]
+    (q/frame-rate frame-rate)
+    (q/background 255)
+    ; set thickness of line
+    (q/stroke-weight 5)
     (q/stroke 0)
     (q/fill 175)
-    (q/line origin-x origin-y x y)
-    (q/ellipse x y 30 30)))
+    (q/line origin-x origin-y pendulum-x pendulum-y)
+    (q/stroke-weight 1)
+    (q/ellipse pendulum-x pendulum-y size size)
+    (when (:save config)
+      (q/save-frame "frame-####.png"))))
+
+
+(defn mouse-action
+  "Control motor with mouse"
+  []
+  {:control (if (q/mouse-pressed?) (- (/ (q/mouse-x) (/ (q/width) 2.0)) 1.0) 0.0)})
+
 
 (defn -main [& _args]
   (let [done-chan (async/chan)]
     (q/sketch
       :title "Inverted Pendulum with Mouse Control"
       :size [500 500]
-      :setup setup
-      :update update-state
+      :setup #(setup 0.1)
+      :update #(update-state % (mouse-action))
       :draw draw-state
       :middleware [m/fun-mode]
       :on-close (fn [& _] (async/close! done-chan)))

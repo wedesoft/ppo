@@ -3,4 +3,9 @@
   org.encog/encog-core {:mvn/version "3.4"}
   quil/quil {:mvn/version "4.3.1563"}
   org.clojure/core.async {:mvn/version "1.9.865"}}
- :paths ["src"]}
+ :paths ["src"]
+ :aliases {:test {:extra-deps {midje/midje {:mvn/version "1.10.10"}
+                               midje-runner/midje-runner {:git/url "https://github.com/wedesoft/midje-runner.git"
+                                                          :git/sha "47c2e6c0f002ac15dc9acfeeb4e83d1ac30457aa"}}
+                  :extra-paths ["test"]
+                  :main-opts ["-m" "midje-runner.runner"]}}}
