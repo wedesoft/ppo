@@ -98,7 +98,7 @@
   (let [done-chan (async/chan)]
     (q/sketch
       :title "Inverted Pendulum with Mouse Control"
-      :size [500 500]
+      :size [854 480]
       :setup #(setup 0.1)
       :update #(update-state % (mouse-action))
       :draw draw-state
