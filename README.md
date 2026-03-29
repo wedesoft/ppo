@@ -5,6 +5,10 @@
 * Install [Clojure](https://clojure.org/)
 * Run XOR example `clj -M -m ppo.xor`
 
+## Run
+
+* Run Pendulum `clj -M -m ppo.pendulum`
+
 # External links
 
 * [John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, Oleg Klimov: Proximal Policy Optimization Algorithms](https://arxiv.org/abs/1707.06347)
