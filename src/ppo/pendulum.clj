@@ -1,6 +1,7 @@
 (ns ppo.pendulum
     (:gen-class)
     (:require [clojure.math :refer (to-radians sin)]
+              [clojure.core.async :as async]
               [quil.core :as q]
               [quil.middleware :as m])
     (:import [java.util.concurrent CountDownLatch]))
@@ -41,7 +42,7 @@
     (q/ellipse x y 30 30)))
 
 (defn -main [& _args]
-  (let [latch (CountDownLatch. 1)]
+  (let [done-chan (async/chan)]
     (q/sketch
       :title "Inverted Pendulum with Mouse Control"
       :size [500 500]
@@ -49,6 +50,6 @@
       :update update-state
       :draw draw-state
       :middleware [m/fun-mode]
-      :on-close (fn [& _] (.countDown latch)))
-    (.await latch))
+      :on-close (fn [& _] (async/close! done-chan)))
+    (async/<!! done-chan))
   (System/exit 0))
