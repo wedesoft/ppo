@@ -13,8 +13,8 @@
 (def config
   {:length  0.8
    :friction 0.1
-   :motor 2.0
-   :gravitation 9.81
+   :motor 5.0
+   :gravitation 20.0
    :dt (/ 1.0 frame-rate)
    :save false})
 
