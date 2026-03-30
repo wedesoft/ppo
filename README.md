@@ -8,7 +8,7 @@
 
 Install the Python packages using `uv sync`.
 
-Make sure using `uv python list` that the uv environment is using the system installed Python executable.
+Make sure using `uv python list` that the uv environment is using the system installed Python executable otherwise it seems to fail to import the `_ctypes` module.
 
 ## Run
 
