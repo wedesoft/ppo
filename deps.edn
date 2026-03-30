@@ -1,5 +1,6 @@
 {:deps
  {org.clojure/clojure {:mvn/version "1.12.4"}
+  clj-python/libpython-clj {:mvn/version "2.026"}
   quil/quil {:mvn/version "4.3.1563"}
   org.clojure/core.async {:mvn/version "1.9.865"}}
  :paths ["src"]
