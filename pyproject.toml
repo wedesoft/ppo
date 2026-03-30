@@ -1,0 +1,22 @@
+[project]
+name = "ppo"
+version = "0.1.0"
+description = "Proximal Policy Optimization"
+authors = [{ name="Jan Wedekind", email="jan@wedesoft.de" }]
+requires-python = ">=3.13.0"
+dependencies = [
+    "gymnasium",
+    "numpy",
+    "torch",
+]
+
+[tool.uv.sources]
+torch = { index = "pytorch" }
+
+[[tool.uv.index]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cpu"
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
