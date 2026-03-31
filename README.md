@@ -8,7 +8,7 @@
 
 Install the Python packages using `uv sync`.
 If your system comes with a newer version of Python, run `uv sync` first.
-If your system comes with an older version or if you want to use a Torch version with GPU support, you need to edit the *project.toml* file before running `uv sync`.
+If your system comes with an older version or if you want to use a Torch version with GPU support, you need to edit the *project.toml* file and run `uv lock` before running `uv sync`.
 
 Make sure using `uv python list` that the uv environment is using the system installed Python executable otherwise it seems to fail to import the `_ctypes` module.
 
