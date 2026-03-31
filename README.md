@@ -2,7 +2,8 @@
 
 ## Installation
 
-* Install [Clojure](https://clojure.org/)
+* Install Java
+* Install [Clojure](https://clojure.org/) (clj tool)
 * Install [Python 3.13](https://www.python.org/)
 * Install [uv](https://docs.astral.sh/uv/)
 
