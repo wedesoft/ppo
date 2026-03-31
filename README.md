@@ -10,9 +10,12 @@ Install the Python packages using `uv sync`.
 
 Make sure using `uv python list` that the uv environment is using the system installed Python executable otherwise it seems to fail to import the `_ctypes` module.
 
+Run `uv run clj -M -m ppo.xor` to check things are working.
+
 ## Run
 
-* Run Pendulum `clj -M -m ppo.pendulum`
+* Run interactive REPL: `uv run clojure -M:rebel`
+* Run Pendulum: `clj -M -m ppo.pendulum`
 
 # External links
 
@@ -20,4 +23,3 @@ Make sure using `uv python list` that the uv environment is using the system ins
 * [PPO implementation by XinJingHao](https://github.com/XinJingHao/PPO-Continuous-Pytorch)
 * [Clojure-Python bridge](https://github.com/clj-python/libpython-clj)
 * [libpython-clj examples by Gigasquid](https://github.com/gigasquid/libpython-clj-examples/)
-

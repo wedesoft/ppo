@@ -8,4 +8,6 @@
                                midje-runner/midje-runner {:git/url "https://github.com/wedesoft/midje-runner.git"
                                                           :git/sha "47c2e6c0f002ac15dc9acfeeb4e83d1ac30457aa"}}
                   :extra-paths ["test"]
-                  :main-opts ["-m" "midje-runner.runner"]}}}
+                  :main-opts ["-m" "midje-runner.runner"]}
+           :rebel {:extra-deps {com.bhauman/rebel-readline {:mvn/version "0.1.5"}}
+                   :main-opts  ["-m" "rebel-readline.main"]}}}

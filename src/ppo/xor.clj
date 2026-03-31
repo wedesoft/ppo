@@ -5,7 +5,8 @@
 
 (require-python '[torch :as torch]
                 '[torch.nn :as nn]
-                '[torch.nn.functional :as F])
+                '[torch.nn.functional :as F]
+                '[torch.optim :as optim])
 
 
 (def XORNet
@@ -31,5 +32,34 @@
              x)))}))
 
 
-(def model (XORNet))
-(py. model __call__ (torch/tensor [1.0 1.0] :dtype torch/float32))
+(defn -main [& _args]
+  (let [model         (XORNet)
+        data          (torch/tensor [[0 0] [0 1] [1 0] [1 1]] :dtype torch/float32)
+        label         (torch/tensor [[0] [1] [1] [0]] :dtype torch/float32)
+        criterion     (nn/BCELoss)
+        epochs        10000
+        learning-rate 0.1
+        optimizer     (optim/Adam (py. model "parameters") :lr learning-rate :weight_decay 0.001)]
+
+    ; Train model
+    (py. model train)
+    (doseq [epoch (range epochs)]
+           (py. optimizer zero_grad)
+           (let [prediction (py. model __call__ data)
+                 loss       (py. criterion __call__ prediction label)]
+             (py. loss backward)
+             (py. optimizer step)
+             (when (= (mod (inc epoch) 1000) 0)
+               (println (str "epoch: " (inc epoch) " loss: " (py. loss item))))))
+
+    ; Run inference
+    (py. model eval)
+    (let [no-grad (torch/no_grad)]
+      (try
+        (py. no-grad __enter__)
+        (doseq [input data]
+               (println input "->" (py. model __call__ input)))
+        (finally
+          (py. no-grad __exit__ nil nil nil))))
+
+    (System/exit 0)))
