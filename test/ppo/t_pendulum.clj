@@ -73,7 +73,9 @@
 
 (facts "Convert action to array and back"
        (action (double-array [0.0])) => {:control 0.0}
-       (action (double-array [0.5])) => {:control 0.5})
+       (action (double-array [0.5])) => {:control 0.5}
+       (action (double-array [2.0])) => {:control 1.0}
+       (action (double-array [-2.0])) => {:control -1.0})
 
 
 (facts "Check whether a run should be aborted"

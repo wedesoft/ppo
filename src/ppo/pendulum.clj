@@ -83,7 +83,7 @@
 (defn action
   "Convert array to action"
   [array]
-  {:control (aget array 0)})
+  {:control (max -1.0 (min 1.0 (aget array 0)))})
 
 
 (defn truncate
