@@ -6,7 +6,7 @@
 
 
 (fact "Set up pendulum"
-      (setup (/ PI 2)) => {:angle (/ PI 2) :velocity 0.0})
+      (setup (/ PI 2)) => {:angle (/ PI 2) :velocity 0.0 :t 0.0})
 
 
 (facts "Angular acceleration due to gravitation"
@@ -39,20 +39,30 @@
 
 
 (facts "Update state"
-       (update-state {:angle 0.0 :velocity 0.0} {:control 0.0} {:dt 1.0 :friction 0.0 :gravitation 9.81 :length 1.0 :motor 2.0})
-       => {:angle 0.0 :velocity 0.0}
-       (update-state {:angle 0.0 :velocity 0.1} {:control 0.0} {:dt 1.0 :friction 0.0 :gravitation 9.81 :length 1.0 :motor 2.0})
-       => {:angle 0.1 :velocity 0.1}
-       (update-state {:angle 0.0 :velocity 0.1} {:control 0.0} {:dt 0.5 :friction 0.0 :gravitation 9.81 :length 1.0 :motor 2.0})
-       => {:angle 0.05 :velocity 0.1}
-       (update-state {:angle 0.0 :velocity 1.0} {:control 0.0} {:dt 1.0 :friction 0.5 :gravitation 9.81 :length 1.0 :motor 2.0})
-       => {:angle 0.5 :velocity 0.5}
-       (update-state {:angle 0.0 :velocity 1.0} {:control 0.0} {:dt 1.0 :friction 2.0 :gravitation 9.81 :length 1.0 :motor 2.0})
-       => {:angle 0.0 :velocity 0.0}
-       (update-state {:angle (/ PI 2) :velocity 0.0} {:control 0.0} {:dt 1.0 :friction 0.0 :gravitation 9.81 :length 1.0 :motor 2.0})
-       => {:angle (- (/ PI 2) 9.81) :velocity -9.81}
-       (update-state {:angle 0.0 :velocity 0.0} {:control 1.0} {:dt 1.0 :friction 0.0 :gravitation 9.81 :length 1.0 :motor 2.0})
-       => {:angle 2.0 :velocity 2.0})
+       (update-state {:angle 0.0 :velocity 0.0 :t 0.0}
+                     {:control 0.0} {:dt 1.0 :friction 0.0 :gravitation 9.81 :length 1.0 :motor 2.0})
+       => {:angle 0.0 :velocity 0.0 :t 1.0}
+       (update-state {:angle 0.0 :velocity 0.0 :t 2.0}
+                     {:control 0.0} {:dt 1.0 :friction 0.0 :gravitation 9.81 :length 1.0 :motor 2.0})
+       => {:angle 0.0 :velocity 0.0 :t 3.0}
+       (update-state {:angle 0.0 :velocity 0.1 :t 0.0}
+                     {:control 0.0} {:dt 1.0 :friction 0.0 :gravitation 9.81 :length 1.0 :motor 2.0})
+       => {:angle 0.1 :velocity 0.1 :t 1.0}
+       (update-state {:angle 0.0 :velocity 0.1 :t 0.0}
+                     {:control 0.0} {:dt 0.5 :friction 0.0 :gravitation 9.81 :length 1.0 :motor 2.0})
+       => {:angle 0.05 :velocity 0.1 :t 0.5}
+       (update-state {:angle 0.0 :velocity 1.0 :t 0.0}
+                     {:control 0.0} {:dt 1.0 :friction 0.5 :gravitation 9.81 :length 1.0 :motor 2.0})
+       => {:angle 0.5 :velocity 0.5 :t 1.0}
+       (update-state {:angle 0.0 :velocity 1.0 :t 0.0}
+                     {:control 0.0} {:dt 1.0 :friction 2.0 :gravitation 9.81 :length 1.0 :motor 2.0})
+       => {:angle 0.0 :velocity 0.0 :t 1.0}
+       (update-state {:angle (/ PI 2) :velocity 0.0 :t 0.0}
+                     {:control 0.0} {:dt 1.0 :friction 0.0 :gravitation 9.81 :length 1.0 :motor 2.0})
+       => {:angle (- (/ PI 2) 9.81) :velocity -9.81 :t 1.0}
+       (update-state {:angle 0.0 :velocity 0.0 :t 0.0}
+                     {:control 1.0} {:dt 1.0 :friction 0.0 :gravitation 9.81 :length 1.0 :motor 2.0})
+       => {:angle 2.0 :velocity 2.0 :t 1.0})
 
 
 (facts "Get observation array from state"

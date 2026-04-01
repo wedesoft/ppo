@@ -23,7 +23,8 @@
   "Initialise pendulum"
   [angle]
   {:angle    angle
-   :velocity 0.0})
+   :velocity 0.0
+   :t        0.0})
 
 
 (defn pendulum-gravity
@@ -57,19 +58,21 @@
   "Perform simulation step of pendulum"
   ([state action]
    (update-state state action config))
-  ([{:keys [angle velocity]} {:keys [control]} {:keys [dt friction motor gravitation length]}]
+  ([{:keys [angle velocity t]} {:keys [control]} {:keys [dt friction motor gravitation length]}]
    (let [friction     (friction-acceleration friction velocity dt)
          gravity      (pendulum-gravity gravitation length angle)
          motor        (motor-acceleration control motor)
+         t            (+ t dt)
          acceleration (+ motor gravity friction)
          velocity     (+ velocity (* acceleration dt))
          angle        (+ angle (* velocity dt))]
      {:angle    angle
-      :velocity velocity})))
+      :velocity velocity
+      :t        t})))
 
 
 (defn observation
-  "Convert state to array"
+  "Get observation from state"
   [{:keys [angle velocity]}]
   (double-array [angle velocity]))
 
