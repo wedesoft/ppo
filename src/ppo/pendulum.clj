@@ -94,13 +94,32 @@
    (>= t timeout)))
 
 
+(defn up-deviation
+  "Angular deviation from up angle"
+  [angle]
+  (- (mod angle (* 2 PI)) PI))
+
+
 (defn done
   "Decide whether pendulum achieved target state"
   ([state config]
    (done state (:target-angle config) (:target-velocity config)))
   ([{:keys [angle velocity]} target-angle target-velocity]
-   (and (<= (abs (- (mod angle (* 2 PI)) PI)) target-angle)
+   (and (<= (abs (up-deviation angle)) target-angle)
         (<= (abs velocity) target-velocity))))
+
+
+(defn sqr
+  "Square of number"
+  [x]
+  (* x x))
+
+
+(defn reward
+  "Reward function"
+  [{:keys [angle velocity]} angle-weight velocity-weight]
+  (- (+ (* angle-weight (sqr (up-deviation angle)))
+        (* velocity-weight (sqr velocity)))))
 
 
 (defn draw-state [{:keys [angle]}]

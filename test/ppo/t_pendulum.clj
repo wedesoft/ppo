@@ -90,3 +90,11 @@
        (done {:angle (+ (- PI) 0.05) :velocity 0.0} 0.1 0.2) => true
        (done {:angle PI :velocity 0.4} 0.1 0.2) => false
        (done {:angle PI :velocity -0.4} 0.1 0.2) => false)
+
+
+(facts "Reward function"
+       (reward {:angle PI :velocity 0.0} 3.0 5.0) => 0.0
+       (reward {:angle (+ PI 2.0) :velocity 0.0} 3.0 5.0) => -12.0
+       (reward {:angle (- PI 2.0) :velocity 0.0} 3.0 5.0) => -12.0
+       (reward {:angle PI :velocity 2.0} 3.0 5.0) => -20.0
+       (reward {:angle PI :velocity -2.0} 3.0 5.0) => -20.0)
