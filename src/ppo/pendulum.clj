@@ -3,7 +3,8 @@
     (:require [clojure.math :refer (PI to-radians cos sin)]
               [clojure.core.async :as async]
               [quil.core :as q]
-              [quil.middleware :as m])
+              [quil.middleware :as m]
+              [ppo.environment :refer (Environment)])
     (:import [java.util.concurrent CountDownLatch]))
 
 
@@ -19,7 +20,9 @@
    :save false
    :timeout 20.0
    :target-angle 0.1
-   :target-velocity 0.2})
+   :target-velocity 0.2
+   :angle-weight 1.0
+   :velocity-weight 1.0})
 
 
 (defn setup
@@ -77,20 +80,20 @@
 (defn observation
   "Get observation from state"
   [{:keys [angle velocity]}]
-  (double-array [(cos angle) (sin angle) velocity]))
+  [(cos angle) (sin angle) velocity])
 
 
 (defn action
   "Convert array to action"
   [array]
-  {:control (max -1.0 (min 1.0 (aget array 0)))})
+  {:control (max -1.0 (min 1.0 (first array)))})
 
 
-(defn truncate
+(defn truncate?
   "Decide whether a run should be aborted"
   ([state]
-   (truncate state (:timeout config)))
-  ([{:keys [t]} timeout]
+   (truncate? state config))
+  ([{:keys [t]} {:keys [timeout]}]
    (>= t timeout)))
 
 
@@ -100,11 +103,11 @@
   (- (mod angle (* 2 PI)) PI))
 
 
-(defn done
+(defn done?
   "Decide whether pendulum achieved target state"
-  ([state config]
-   (done state (:target-angle config) (:target-velocity config)))
-  ([{:keys [angle velocity]} target-angle target-velocity]
+  ([state]
+   (done? state config))
+  ([{:keys [angle velocity]} {:keys [target-angle target-velocity]}]
    (and (<= (abs (up-deviation angle)) target-angle)
         (<= (abs velocity) target-velocity))))
 
@@ -117,9 +120,23 @@
 
 (defn reward
   "Reward function"
-  [{:keys [angle velocity]} angle-weight velocity-weight]
+  [{:keys [angle velocity]} {:keys [angle-weight velocity-weight]}]
   (- (+ (* angle-weight (sqr (up-deviation angle)))
         (* velocity-weight (sqr velocity)))))
+
+
+(defrecord Pendulum [config state]
+  Environment
+  (environment-update [this input]
+    (->Pendulum config (update-state state (action input) config)))
+  (environment-observation [this]
+    (observation state))
+  (environment-done? [this]
+    (done? state config))
+  (environment-truncate? [this]
+    (truncate? state config))
+  (environment-reward [this]
+    (reward state config)))
 
 
 (defn draw-state [{:keys [angle]}]
