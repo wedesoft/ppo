@@ -1,6 +1,6 @@
 (ns ppo.pendulum
     (:gen-class)
-    (:require [clojure.math :refer (to-radians cos sin)]
+    (:require [clojure.math :refer (PI to-radians cos sin)]
               [clojure.core.async :as async]
               [quil.core :as q]
               [quil.middleware :as m])
@@ -16,7 +16,10 @@
    :motor 5.0
    :gravitation 20.0
    :dt (/ 1.0 frame-rate)
-   :save false})
+   :save false
+   :timeout 20.0
+   :target-angle 0.1
+   :target-velocity 0.2})
 
 
 (defn setup
@@ -81,6 +84,23 @@
   "Convert array to action"
   [array]
   {:control (aget array 0)})
+
+
+(defn truncate
+  "Decide whether a run should be aborted"
+  ([state]
+   (truncate state (:timeout config)))
+  ([{:keys [t]} timeout]
+   (>= t timeout)))
+
+
+(defn done
+  "Decide whether pendulum achieved target state"
+  ([state config]
+   (done state (:target-angle config) (:target-velocity config)))
+  ([{:keys [angle velocity]} target-angle target-velocity]
+   (and (<= (abs (- (mod angle (* 2 PI)) PI)) target-angle)
+        (<= (abs velocity) target-velocity))))
 
 
 (defn draw-state [{:keys [angle]}]

@@ -73,3 +73,19 @@
 (facts "Convert action to array and back"
        (action (double-array [0.0])) => {:control 0.0}
        (action (double-array [0.5])) => {:control 0.5})
+
+
+(facts "Check whether a run should be aborted"
+       (truncate {:t 50.0} 100.0) => false
+       (truncate {:t 100.0} 100.0) => true
+       (truncate {:t 101.0} 100.0) => true)
+
+
+(facts "Check whether pendulum achieved target state"
+       (done {:angle 0.0 :velocity 0.0} 0.1 0.2) => false
+       (done {:angle (- PI 0.05) :velocity 0.0} 0.1 0.2) => true
+       (done {:angle (+ PI 0.05) :velocity 0.0} 0.1 0.2) => true
+       (done {:angle (- (- PI) 0.05) :velocity 0.0} 0.1 0.2) => true
+       (done {:angle (+ (- PI) 0.05) :velocity 0.0} 0.1 0.2) => true
+       (done {:angle PI :velocity 0.4} 0.1 0.2) => false
+       (done {:angle PI :velocity -0.4} 0.1 0.2) => false)
