@@ -1,6 +1,6 @@
 (ns ppo.t-pendulum
     (:require
-      [clojure.math :refer (PI)]
+      [clojure.math :refer (PI cos)]
       [midje.sweet :refer :all]
       [ppo.pendulum :refer :all]))
 
@@ -66,8 +66,9 @@
 
 
 (facts "Get observation array from state"
-       (seq (observation {:angle 0.0 :velocity 0.0})) => [0.0 0.0]
-       (seq (observation {:angle 0.25 :velocity 0.5})) => [0.25 0.5])
+       (seq (observation {:angle 0.0 :velocity 0.0})) => [1.0 0.0 0.0]
+       (seq (observation {:angle 0.0 :velocity 0.5})) => [1.0 0.0 0.5]
+       (seq (observation {:angle (/ PI 2) :velocity 0.0})) => [(cos (/ PI 2)) 1.0 0.0])
 
 
 (facts "Convert action to array and back"

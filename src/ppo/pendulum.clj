@@ -77,7 +77,7 @@
 (defn observation
   "Get observation from state"
   [{:keys [angle velocity]}]
-  (double-array [angle velocity]))
+  (double-array [(cos angle) (sin angle) velocity]))
 
 
 (defn action
