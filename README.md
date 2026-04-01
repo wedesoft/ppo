@@ -24,5 +24,6 @@ Run `uv run clj -M -m ppo.xor` to check things are working.
 
 * [John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, Oleg Klimov: Proximal Policy Optimization Algorithms](https://arxiv.org/abs/1707.06347)
 * [PPO implementation by XinJingHao](https://github.com/XinJingHao/PPO-Continuous-Pytorch)
+* [Gymnasium library](https://gymnasium.farama.org/)
 * [Clojure-Python bridge](https://github.com/clj-python/libpython-clj)
 * [libpython-clj examples by Gigasquid](https://github.com/gigasquid/libpython-clj-examples/)
