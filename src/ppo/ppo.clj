@@ -9,6 +9,7 @@
   [environment-factory policy n]
   (loop [state             (environment-factory)
          observations      []
+         actions           []
          next-observations []
          rewards           []
          dones             []
@@ -16,19 +17,21 @@
          i                 n]
     (if (zero? i)
       {:observations      observations
+       :actions           actions
        :next-observations next-observations
        :rewards           rewards
        :dones             dones
        :truncates         truncates}
       (let [observation      (environment-observation state)
+            action           (policy observation)
             reward           (environment-reward state)
             done             (environment-done? state)
             truncate         (environment-truncate? state)
-            action           (policy observation)
             next-state       (if (or done truncate) (environment-factory) (environment-update state action))
             next-observation (environment-observation next-state)]
         (recur next-state
                (conj observations observation)
+               (conj actions action)
                (conj next-observations next-observation)
                (conj rewards reward)
                (conj dones done)

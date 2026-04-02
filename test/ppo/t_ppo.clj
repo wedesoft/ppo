@@ -18,6 +18,7 @@
 
 (defn test-env-factory [] (constantly (->TestEnvironment 1)))
 (defn stop-at-102 [observation] (if (>= (first observation) 102) [0] [1]))
+(defn feedback-state [observation] [(- (first observation) 100)])
 
 (facts "Generate samples from environment"
        (:observations (sample-environment (test-env-factory) (constantly [0]) 1)) => [[101]]
@@ -29,4 +30,5 @@
        (:observations (sample-environment (test-env-factory) (constantly [3]) 5)) => [[101] [104] [107] [110] [101]]
        (:truncates (sample-environment (test-env-factory) (constantly [-1]) 3)) => [false false true]
        (:observations (sample-environment (test-env-factory) (constantly [-1]) 4)) => [[101] [100] [99] [101]]
-       (:next-observations (sample-environment (test-env-factory) (constantly [3]) 5)) => [[104] [107] [110] [101] [104]])
+       (:next-observations (sample-environment (test-env-factory) (constantly [3]) 5)) => [[104] [107] [110] [101] [104]]
+       (:actions (sample-environment (test-env-factory) feedback-state 3)) => [[1] [2] [4]])
