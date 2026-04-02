@@ -127,15 +127,15 @@
 
 (defrecord Pendulum [config state]
   Environment
-  (environment-update [this input]
+  (environment-update [_this input]
     (->Pendulum config (update-state state (action input) config)))
-  (environment-observation [this]
+  (environment-observation [_this]
     (observation state))
-  (environment-done? [this]
+  (environment-done? [_this]
     (done? state config))
-  (environment-truncate? [this]
+  (environment-truncate? [_this]
     (truncate? state config))
-  (environment-reward [this]
+  (environment-reward [_this]
     (reward state config)))
 
 
