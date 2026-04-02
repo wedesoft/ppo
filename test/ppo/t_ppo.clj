@@ -27,5 +27,6 @@
        (:rewards (sample-environment (test-env-factory) (constantly [1]) 5)) => [-4 -3 -2 -1 0]
        (:dones (sample-environment (test-env-factory) (constantly [3]) 4)) => [false false false true]
        (:observations (sample-environment (test-env-factory) (constantly [3]) 5)) => [[101] [104] [107] [110] [101]]
-       (:dones (sample-environment (test-env-factory) (constantly [-1]) 3)) => [false false true]
+       (:truncates (sample-environment (test-env-factory) (constantly [-1]) 3)) => [false false true]
+       (:observations (sample-environment (test-env-factory) (constantly [-1]) 4)) => [[101] [100] [99] [101]]
        (:next-observations (sample-environment (test-env-factory) (constantly [3]) 5)) => [[104] [107] [110] [101] [104]])

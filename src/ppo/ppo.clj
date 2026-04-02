@@ -4,12 +4,6 @@
                                environment-truncate?)]))
 
 
-(defn done?
-  "Decide whether a run is finished or aborted"
-  [environment]
-  (or (environment-done? environment) (environment-truncate? environment)))
-
-
 (defn sample-environment
   "Collect trajectory data from environment"
   [environment-factory policy n]
@@ -18,21 +12,25 @@
          next-observations []
          rewards           []
          dones             []
+         truncates         []
          i                 n]
     (if (zero? i)
       {:observations      observations
        :next-observations next-observations
        :rewards           rewards
-       :dones             dones}
+       :dones             dones
+       :truncates         truncates}
       (let [observation      (environment-observation state)
             reward           (environment-reward state)
-            done             (done? state)
+            done             (environment-done? state)
+            truncate         (environment-truncate? state)
             action           (policy observation)
-            next-state       (if done (environment-factory) (environment-update state action))
+            next-state       (if (or done truncate) (environment-factory) (environment-update state action))
             next-observation (environment-observation next-state)]
         (recur next-state
                (conj observations observation)
                (conj next-observations next-observation)
                (conj rewards reward)
                (conj dones done)
+               (conj truncates truncate)
                (dec i))))))
