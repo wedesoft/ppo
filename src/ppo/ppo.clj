@@ -15,13 +15,7 @@
          dones             []
          truncates         []
          i                 n]
-    (if (zero? i)
-      {:observations      observations
-       :actions           actions
-       :next-observations next-observations
-       :rewards           rewards
-       :dones             dones
-       :truncates         truncates}
+    (if (pos? i)
       (let [observation      (environment-observation state)
             action           (policy observation)
             reward           (environment-reward state)
@@ -36,4 +30,10 @@
                (conj rewards reward)
                (conj dones done)
                (conj truncates truncate)
-               (dec i))))))
+               (dec i)))
+      {:observations      observations
+       :actions           actions
+       :next-observations next-observations
+       :rewards           rewards
+       :dones             dones
+       :truncates         truncates})))
