@@ -42,3 +42,12 @@
        (deltas {:observations [[4] [3]] :next-observations [[3] [2]] :rewards [2 3] :dones [false false]} linear-critic 1.0)
        => [1.0 2.0]
        (deltas {:observations [[4]] :next-observations [[3]] :rewards [4] :dones [true]} linear-critic 1.0) => [0.0])
+
+
+(facts "Compute advantages attributed to each action"
+       (advantages {:dones [false]} [0.0] 1.0 1.0) => [0.0]
+       (advantages {:dones [false]} [1.0] 1.0 1.0) => [1.0]
+       (advantages {:dones [false false]} [2.0 3.0] 1.0 1.0) => [5.0 3.0]
+       (advantages {:dones [false false]} [2.0 3.0] 0.5 1.0) => [3.5 3.0]
+       (advantages {:dones [false false]} [2.0 3.0] 1.0 0.5) => [3.5 3.0]
+       (advantages {:dones [true false]} [2.0 3.0] 1.0 1.0) => [2.0 3.0])

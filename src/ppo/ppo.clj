@@ -45,3 +45,15 @@
   (mapv (fn [observation next-observation reward done]
             (- (+ reward (if done 0.0 (* gamma (critic next-observation)))) (critic observation)))
         observations next-observations rewards dones))
+
+
+(defn advantages
+  "Compute advantages attributed to each action"
+  [{:keys [dones]} deltas gamma lambda]
+  (reverse
+    (rest
+      (reductions
+        (fn [advantage [delta done]]
+            (+ delta (if done 0.0 (* gamma lambda advantage))))
+        0.0
+        (reverse (map vector deltas dones))))))
