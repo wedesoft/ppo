@@ -41,6 +41,7 @@
 
 (defn deltas
   "Compute difference between actual reward plus discounted estimate of next state and estimated value of current state"
-  [{:keys [observations next-observations rewards]} critic gamma]
-  (mapv (fn [observation next-observation reward] (- reward (- (critic observation) (* gamma (critic next-observation)))))
-        observations next-observations rewards))
+  [{:keys [observations next-observations rewards dones]} critic gamma]
+  (mapv (fn [observation next-observation reward done]
+            (- (+ reward (if done 0.0 (* gamma (critic next-observation)))) (critic observation)))
+        observations next-observations rewards dones))

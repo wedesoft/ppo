@@ -35,8 +35,10 @@
 (defn linear-critic [observation] (first observation))
 
 (facts "Compute difference between actual reward plus discounted estimate of next state and estimated value of current state"
-       (deltas {:observations [[4]] :next-observations [[3]] :rewards [0]} (constantly 0) 1.0) => [0.0]
-       (deltas {:observations [[4]] :next-observations [[3]] :rewards [1]} (constantly 0) 1.0) => [1.0]
-       (deltas {:observations [[4]] :next-observations [[3]] :rewards [1]} linear-critic 1.0) => [0.0]
-       (deltas {:observations [[2]] :next-observations [[1]] :rewards [1]} linear-critic 0.5) => [-0.5]
-       (deltas {:observations [[4] [3]] :next-observations [[3] [2]] :rewards [2 3]} linear-critic 1.0) => [1.0 2.0])
+       (deltas {:observations [[4]] :next-observations [[3]] :rewards [0] :dones [false]} (constantly 0) 1.0) => [0.0]
+       (deltas {:observations [[4]] :next-observations [[3]] :rewards [1] :dones [false]} (constantly 0) 1.0) => [1.0]
+       (deltas {:observations [[4]] :next-observations [[3]] :rewards [1] :dones [false]} linear-critic 1.0) => [0.0]
+       (deltas {:observations [[2]] :next-observations [[1]] :rewards [1] :dones [false]} linear-critic 0.5) => [-0.5]
+       (deltas {:observations [[4] [3]] :next-observations [[3] [2]] :rewards [2 3] :dones [false false]} linear-critic 1.0)
+       => [1.0 2.0]
+       (deltas {:observations [[4]] :next-observations [[3]] :rewards [4] :dones [true]} linear-critic 1.0) => [0.0])
