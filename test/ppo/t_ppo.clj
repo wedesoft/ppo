@@ -30,3 +30,13 @@
        (:observations (sample-environment (test-env-factory) (constantly [-1]) 4)) => [[101] [100] [99] [101]]
        (:next-observations (sample-environment (test-env-factory) (constantly [3]) 5)) => [[104] [107] [110] [101] [104]]
        (:actions (sample-environment (test-env-factory) feedback-state 3)) => [[1] [2] [4]])
+
+
+(defn linear-critic [observation] (first observation))
+
+(facts "Compute difference between actual reward plus discounted estimate of next state and estimated value of current state"
+       (deltas {:observations [[4]] :next-observations [[3]] :rewards [0]} (constantly 0) 1.0) => [0.0]
+       (deltas {:observations [[4]] :next-observations [[3]] :rewards [1]} (constantly 0) 1.0) => [1.0]
+       (deltas {:observations [[4]] :next-observations [[3]] :rewards [1]} linear-critic 1.0) => [0.0]
+       (deltas {:observations [[2]] :next-observations [[1]] :rewards [1]} linear-critic 0.5) => [-0.5]
+       (deltas {:observations [[4] [3]] :next-observations [[3] [2]] :rewards [2 3]} linear-critic 1.0) => [1.0 2.0])
