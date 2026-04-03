@@ -135,7 +135,7 @@
     (done? state config))
   (environment-truncate? [_this]
     (truncate? state config))
-  (environment-reward [_this]
+  (environment-reward [_this _action]
     (reward state config)))
 
 

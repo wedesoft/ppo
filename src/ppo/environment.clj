@@ -6,4 +6,4 @@
   (environment-observation [this])
   (environment-done? [this])
   (environment-truncate? [this])
-  (environment-reward [this]))
+  (environment-reward [this action]))

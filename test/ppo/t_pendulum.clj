@@ -123,4 +123,4 @@
        (environment-observation (->Pendulum test-config (setup 0.0))) => [1.0 0.0 0.0]
        (environment-done? (->Pendulum test-config (setup PI))) => true
        (environment-truncate? (->Pendulum test-config (setup 0.0))) => false
-       (environment-reward (->Pendulum test-config (setup (- PI 1.0)))) => -3.0)
+       (environment-reward (->Pendulum test-config (setup (- PI 1.0))) [0.5]) => -3.0)

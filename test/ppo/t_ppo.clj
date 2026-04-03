@@ -11,9 +11,7 @@
   (environment-observation [_this] [(+ state 100)])
   (environment-done? [_this] (>= state 10))
   (environment-truncate? [_this] (< state 0))
-  (environment-reward [_this] (- (abs (- state 5)))))
-
-(def counter (atom 0))
+  (environment-reward [_this _action] (- (abs (- state 5)))))
 
 
 (defn test-env-factory [] (constantly (->TestEnvironment 1)))

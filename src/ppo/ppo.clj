@@ -18,7 +18,7 @@
     (if (pos? i)
       (let [observation      (environment-observation state)
             action           (policy observation)
-            reward           (environment-reward state)
+            reward           (environment-reward state action)
             done             (environment-done? state)
             truncate         (environment-truncate? state)
             next-state       (if (or done truncate) (environment-factory) (environment-update state action))
