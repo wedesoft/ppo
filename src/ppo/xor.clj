@@ -37,7 +37,7 @@
         data          (torch/tensor [[0 0] [0 1] [1 0] [1 1]] :dtype torch/float32)
         label         (torch/tensor [[0] [1] [1] [0]] :dtype torch/float32)
         criterion     (nn/BCELoss)
-        epochs        10000
+        epochs        1000
         learning-rate 0.1
         optimizer     (optim/Adam (py. model "parameters") :lr learning-rate :weight_decay 0.001)]
 
@@ -49,7 +49,7 @@
                  loss       (py. criterion __call__ prediction label)]
              (py. loss backward)
              (py. optimizer step)
-             (when (= (mod (inc epoch) 1000) 0)
+             (when (= (mod (inc epoch) 100) 0)
                (println (str "epoch: " (inc epoch) " loss: " (py. loss item))))))
 
     ; Run inference
@@ -57,8 +57,7 @@
     (let [no-grad (torch/no_grad)]
       (try
         (py. no-grad __enter__)
-        (doseq [input data]
-               (println input "->" (py. model __call__ input)))
+        (println data "->" (py. model __call__ data))
         (finally
           (py. no-grad __exit__ nil nil nil))))
 
