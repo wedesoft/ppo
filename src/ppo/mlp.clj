@@ -1,0 +1,48 @@
+(ns ppo.mlp
+    (:require [libpython-clj2.require :refer (require-python)]
+              [libpython-clj2.python :refer (py.) :as py]))
+
+(require-python '[torch :as torch]
+                '[torch.nn :as nn]
+                '[torch.nn.functional :as F])
+
+
+(defmacro without-gradient
+  "Execute body without gradient calculation"
+  [& body]
+  `(let [no-grad# (torch/no_grad)]
+     (try
+       (py. no-grad# ~'__enter__)
+       ~@body
+       (finally
+         (py. no-grad# ~'__exit__ nil nil nil)))))
+
+
+(defn tensor
+  "Convert nested vector to tensor"
+  [data]
+  (torch/tensor data :dtype torch/float32))
+
+
+(def Critic
+  (py/create-class
+    "Critic" [nn/Module]
+    {"__init__"
+     (py/make-instance-fn
+       (fn [self observation-size hidden-units]
+           (py. nn/Module __init__ self)
+           (py/set-attrs!
+             self
+             {"fc1" (nn/Linear observation-size hidden-units)
+              "fc2" (nn/Linear hidden-units hidden-units)
+              "fc3" (nn/Linear hidden-units 1)})
+           nil))
+     "forward"
+     (py/make-instance-fn
+       (fn [self x]
+           (let [x (py. self fc1 x)
+                 x (torch/tanh x)
+                 x (py. self fc2 x)
+                 x (torch/tanh x)
+                 x (py. self fc3 x)]
+             x)))}))
