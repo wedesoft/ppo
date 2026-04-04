@@ -4,7 +4,7 @@
 
 (require-python '[torch :as torch]
                 '[torch.nn :as nn]
-                '[torch.nn.functional :as F])
+                '[torch.optim :as optim])
 
 
 (defmacro without-gradient
@@ -64,3 +64,21 @@
   "Mean square error cost function"
   []
   (nn/MSELoss))
+
+
+(defn adam-optimizer
+  "Adam optimizer"
+  [model learning-rate weight-decay]
+  (optim/Adam (py. model parameters) :lr learning-rate :weight_decay weight-decay))
+
+
+(defn train
+  "Train network for specified number of epochs"
+  [optimizer model criterion batches epochs]
+  (doseq [epoch (range epochs)]
+         (doseq [[data label] batches]
+                (py. optimizer zero_grad)
+                (let [prediction (py. model __call__ data)
+                      loss       (py. criterion __call__ prediction label)]
+                  (py. loss backward)
+                  (py. optimizer step)))))

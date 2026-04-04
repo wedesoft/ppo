@@ -8,17 +8,13 @@
 (require-python '[torch :as torch])
 
 
-(def critic (Critic 2 5))
-(without-gradient
-  (doseq [param (py. critic parameters)]
-         (py. param zero_)))
-
 (fact "Test critic network"
-      (let [critic (Critic 2 5)]
+      (let [zero-critic (Critic 2 5)]
         (without-gradient
-          (doseq [param (py. critic parameters)]
+          (doseq [param (py. zero-critic parameters)]
                  (py. param zero_)))
-        (tolist (without-gradient (py. critic __call__ (tensor [[0 0] [0 0] [0 0]]))))) => [[0.0] [0.0] [0.0]])
+        (py. zero-critic eval)
+        (tolist (without-gradient (py. zero-critic __call__ (tensor [[0 0] [0 0] [0 0]])))) => [[0.0] [0.0] [0.0]]))
 
 
 (fact "Mean square error cost function"
@@ -27,3 +23,15 @@
           (toitem (criterion (tensor [[0.0] [0.0] [0.0]]) (tensor [[0.0] [0.0] [0.0]]))) => 0.0
           (toitem (criterion (tensor [[0.0] [0.0] [0.0]]) (tensor [[1.0] [1.0] [1.0]]))) => 1.0
           (toitem (criterion (tensor [[-1.0] [-1.0] [-1.0]]) (tensor [[1.0] [1.0] [1.0]])))  => 4.0)))
+
+
+(fact "Train network"
+      (let [model     (Critic 1 2)
+            optimizer (adam-optimizer model 0.1 0.001)
+            batches   [[(tensor [[0.0] [0.0]]) (tensor [[0.0] [0.0]])] [(tensor [[1.0] [1.0]]) (tensor [[1.0] [1.0]])]]
+            criterion (mse-loss)]
+        (py. model train)
+        (train optimizer model criterion batches 100)
+        (py. model eval)
+        (without-gradient
+          (toitem (criterion (py. model __call__ (tensor [[0.0] [1.0]])) (tensor [[0.0] [1.0]]))) => (roughly 0.0 1e-3))))
