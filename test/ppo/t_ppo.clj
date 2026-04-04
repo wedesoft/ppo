@@ -51,3 +51,10 @@
        (advantages {:dones [false false]} [2.0 3.0] 0.5 1.0) => [3.5 3.0]
        (advantages {:dones [false false]} [2.0 3.0] 1.0 0.5) => [3.5 3.0]
        (advantages {:dones [true false]} [2.0 3.0] 1.0 1.0) => [2.0 3.0])
+
+
+(facts "Target values for critic"
+       (critic-target {:observations [[4]]} [0] (constantly 0)) => [0]
+       (critic-target {:observations [[4]]} [2] (constantly 0)) => [2]
+       (critic-target {:observations [[4]]} [0] linear-critic) => [4]
+       (critic-target {:observations [[4]]} [3] linear-critic) => [7])

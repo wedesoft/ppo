@@ -57,3 +57,9 @@
             (+ delta (if done 0.0 (* gamma lambda advantage))))
         0.0
         (reverse (map vector deltas dones))))))
+
+
+(defn critic-target
+  "Determine target values for critic"
+  [{:keys [observations]} advantages critic]
+  (map (fn [observation advantage] (+ (critic observation) advantage)) observations advantages))
