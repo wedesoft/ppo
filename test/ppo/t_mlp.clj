@@ -13,6 +13,17 @@
   (doseq [param (py. critic parameters)]
          (py. param zero_)))
 
-(facts "Test critic network"
-       (py/->jvm (py. (without-gradient (py. critic __call__ (tensor [[0 0] [0 0] [0 0]]))) tolist))
-       => [[0.0] [0.0] [0.0]])
+(fact "Test critic network"
+      (let [critic (Critic 2 5)]
+        (without-gradient
+          (doseq [param (py. critic parameters)]
+                 (py. param zero_)))
+        (tolist (without-gradient (py. critic __call__ (tensor [[0 0] [0 0] [0 0]]))))) => [[0.0] [0.0] [0.0]])
+
+
+(fact "Mean square error cost function"
+      (let [criterion (mse-loss)]
+        (without-gradient
+          (toitem (criterion (tensor [[0.0] [0.0] [0.0]]) (tensor [[0.0] [0.0] [0.0]]))) => 0.0
+          (toitem (criterion (tensor [[0.0] [0.0] [0.0]]) (tensor [[1.0] [1.0] [1.0]]))) => 1.0
+          (toitem (criterion (tensor [[-1.0] [-1.0] [-1.0]]) (tensor [[1.0] [1.0] [1.0]])))  => 4.0)))

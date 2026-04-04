@@ -24,6 +24,18 @@
   (torch/tensor data :dtype torch/float32))
 
 
+(defn tolist
+  "Convert tensor to nested vector"
+  [tensor]
+  (py/->jvm (py. tensor tolist)))
+
+
+(defn toitem
+  "Convert torch scalar value to float"
+  [tensor]
+  (py. tensor item))
+
+
 (def Critic
   (py/create-class
     "Critic" [nn/Module]
@@ -46,3 +58,9 @@
                  x (torch/tanh x)
                  x (py. self fc3 x)]
              x)))}))
+
+
+(defn mse-loss
+  "Mean square error cost function"
+  []
+  (nn/MSELoss))
