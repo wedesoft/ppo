@@ -6,7 +6,8 @@
                 '[torch :as torch]
                 '[torch.nn :as nn]
                 '[torch.nn.functional :as F]
-                '[torch.optim :as optim])
+                '[torch.optim :as optim]
+                '[torch.distributions :refer (Normal)])
 
 
 (defmacro without-gradient
@@ -85,11 +86,17 @@
                  x (torch/tanh x)
                  mu (torch/tanh (py. self fcmu x))
                  sigma (F/softplus (py. self fcsigma x))]
-             (python/tuple [mu sigma]))))
+             [mu sigma])))
      "deterministic_act"
      (py/make-instance-fn
        (fn [self x]
-           (first (py. self forward x))))}))
+            (let [[mu _sigma] (py. self forward x)]
+              mu)))
+     "get_dist"
+     (py/make-instance-fn
+       (fn [self x]
+           (let [[mu sigma] (py. self forward x)]
+             (Normal mu sigma))))}))
 
 
 (defn mse-loss

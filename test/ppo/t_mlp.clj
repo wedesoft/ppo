@@ -37,13 +37,15 @@
           (toitem (criterion (py. model __call__ (tensor [[0.0] [1.0]])) (tensor [[0.0] [1.0]]))) => (roughly 0.0 1e-3))))
 
 
-(fact "Test actor network"
-      (without-gradient
-        (let [zero-actor (Actor 2 5 1)]
-          (doseq [param (py. zero-actor parameters)]
-                 (py. param zero_))
-          (py. zero-actor eval)
-          (let [result (py. zero-actor __call__ (tensor [[0 0] [0 0] [0 0]]))]
-            (tolist (first result)) => [[0.0] [0.0] [0.0]]
-            (tolist (second result)) => [[0.6931471824645996] [0.6931471824645996] [0.6931471824645996]])
-          (tolist (py. zero-actor deterministic_act (tensor [[0 0]]))) => [[0.0]])))
+(facts "Test actor network"
+       (without-gradient
+         (let [zero-actor (Actor 2 5 1)]
+           (doseq [param (py. zero-actor parameters)]
+                  (py. param zero_))
+           (py. zero-actor eval)
+           (let [result (py. zero-actor __call__ (tensor [[0 0] [0 0] [0 0]]))]
+             (tolist (first result)) => [[0.0] [0.0] [0.0]]
+             (tolist (second result)) => [[0.6931471824645996] [0.6931471824645996] [0.6931471824645996]])
+           (tolist (py. zero-actor deterministic_act (tensor [[0 0]]))) => [[0.0]]
+           (tolist (py/py.- (py. zero-actor get_dist (tensor [[0 0]])) mean)) => [[0.0]]
+           (tolist (py/py.- (py. zero-actor get_dist (tensor [[0 0]])) stddev)) => [[0.6931471824645996]])))
