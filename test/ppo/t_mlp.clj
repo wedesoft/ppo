@@ -9,12 +9,12 @@
 
 
 (fact "Test critic network"
-      (let [zero-critic (Critic 2 5)]
-        (without-gradient
+      (without-gradient
+        (let [zero-critic (Critic 2 5)]
           (doseq [param (py. zero-critic parameters)]
-                 (py. param zero_)))
-        (py. zero-critic eval)
-        (tolist (without-gradient (py. zero-critic __call__ (tensor [[0 0] [0 0] [0 0]])))) => [[0.0] [0.0] [0.0]]))
+                 (py. param zero_))
+          (py. zero-critic eval)
+          (tolist (py. zero-critic __call__ (tensor [[0 0] [0 0] [0 0]]))) => [[0.0] [0.0] [0.0]])))
 
 
 (fact "Mean square error cost function"
@@ -35,3 +35,15 @@
         (py. model eval)
         (without-gradient
           (toitem (criterion (py. model __call__ (tensor [[0.0] [1.0]])) (tensor [[0.0] [1.0]]))) => (roughly 0.0 1e-3))))
+
+
+(fact "Test actor network"
+      (without-gradient
+        (let [zero-actor (Actor 2 5 1)]
+          (doseq [param (py. zero-actor parameters)]
+                 (py. param zero_))
+          (py. zero-actor eval)
+          (let [result (py. zero-actor __call__ (tensor [[0 0] [0 0] [0 0]]))]
+            (tolist (first result)) => [[0.0] [0.0] [0.0]]
+            (tolist (second result)) => [[0.6931471824645996] [0.6931471824645996] [0.6931471824645996]])
+          (tolist (py. zero-actor deterministic_act (tensor [[0 0]]))) => [[0.0]])))

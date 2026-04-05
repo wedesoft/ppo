@@ -2,8 +2,10 @@
     (:require [libpython-clj2.require :refer (require-python)]
               [libpython-clj2.python :refer (py.) :as py]))
 
-(require-python '[torch :as torch]
+(require-python '[builtins :as python]
+                '[torch :as torch]
                 '[torch.nn :as nn]
+                '[torch.nn.functional :as F]
                 '[torch.optim :as optim])
 
 
@@ -58,6 +60,36 @@
                  x (torch/tanh x)
                  x (py. self fc3 x)]
              x)))}))
+
+
+(def Actor
+  (py/create-class
+    "Actor" [nn/Module]
+    {"__init__"
+     (py/make-instance-fn
+       (fn [self observation-size hidden-units action-size]
+           (py. nn/Module __init__ self)
+           (py/set-attrs!
+             self
+             {"fc1" (nn/Linear observation-size hidden-units)
+              "fc2" (nn/Linear hidden-units hidden-units)
+              "fcmu" (nn/Linear hidden-units action-size)
+              "fcsigma" (nn/Linear hidden-units action-size)})
+           nil))
+     "forward"
+     (py/make-instance-fn
+       (fn [self x]
+           (let [x (py. self fc1 x)
+                 x (torch/tanh x)
+                 x (py. self fc2 x)
+                 x (torch/tanh x)
+                 mu (torch/tanh (py. self fcmu x))
+                 sigma (F/softplus (py. self fcsigma x))]
+             (python/tuple [mu sigma]))))
+     "deterministic_act"
+     (py/make-instance-fn
+       (fn [self x]
+           (first (py. self forward x))))}))
 
 
 (defn mse-loss
