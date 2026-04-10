@@ -80,13 +80,11 @@
 (facts "Clipped surrogate loss (negative objective)"
        ;; zero advantage
        (tolist (clipped-surrogate-loss (tensor [[1.0]]) (tensor [[0.0]]) 0.25)) => [[0.0]]
-
        ;; positive advantage
        (tolist (clipped-surrogate-loss (tensor [[1.0]]) (tensor [[3.0]]) 0.25)) => [[-3.0]]
        (tolist (clipped-surrogate-loss (tensor [[1.25]]) (tensor [[3.0]]) 0.25)) => [[-3.75]]
        (tolist (clipped-surrogate-loss (tensor [[2.0]]) (tensor [[3.0]]) 0.25)) => [[-3.75]]
        (tolist (clipped-surrogate-loss (tensor [[0.0]]) (tensor [[3.0]]) 0.25)) => [[0.0]]
-
        ;; negative advantage
        (tolist (clipped-surrogate-loss (tensor [[1.0]]) (tensor [[-3.0]]) 0.25)) => [[3.0]]
        (tolist (clipped-surrogate-loss (tensor [[0.75]]) (tensor [[-3.0]]) 0.25)) => [[2.25]]
