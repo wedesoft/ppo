@@ -80,3 +80,12 @@
   [{:keys [observations]} policy old-logprobs]
   (let [logprobs (:logprob (policy observations))]
     (torch/exp (py. (torch/sub logprobs old-logprobs) sum 1 :keepdim true))))
+
+
+(defn clipped-surrogate-loss
+  "Clipped surrogate loss (negative objective)"
+  [probability-ratios advantages epsilon]
+  (torch/neg
+    (torch/min
+      (torch/mul probability-ratios advantages)
+      (torch/mul (torch/clamp probability-ratios (- 1.0 epsilon) (+ 1.0 epsilon)) advantages))))
