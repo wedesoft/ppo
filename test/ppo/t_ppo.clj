@@ -2,7 +2,7 @@
     (:require
       [midje.sweet :refer :all]
       [ppo.environment :refer (Environment)]
-      [ppo.mlp :refer (tensor tolist)]
+      [ppo.mlp :refer (tensor tolist Actor)]
       [ppo.ppo :refer :all]))
 
 
@@ -34,6 +34,12 @@
        (:actions (sample-environment (test-env-factory) feedback-state 3)) => [[1] [2] [4]]
        (:logprobs (sample-environment (test-env-factory) (constant-value 0) 1))  => [[0]]
        (:logprobs (sample-environment (test-env-factory) feedback-state 3)) => [[-1] [-2] [-4]])
+
+
+(fact "Integration test sampling environment"
+      (let [factory (test-env-factory)
+            actor   (Actor 1 5 1)]
+        (sample-environment (test-env-factory) actor 8)))
 
 
 (defn linear-critic [observation] (first observation))

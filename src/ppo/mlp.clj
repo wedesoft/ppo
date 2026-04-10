@@ -123,7 +123,7 @@
                   (py. optimizer step)))))
 
 
-(defn indeterministic-act
+(defn tensor-indeterministic-act
   "Sample action using actor network returning distribution"
   [actor x]
   (let [dist    (py. actor get_dist x)
@@ -131,3 +131,10 @@
         action  (torch/clamp sample -1.0 1.0)
         logprob (py. dist log_prob action)]
     {:action action :logprob logprob}))
+
+
+(defn indeterministic-act
+  "Perform conversions to torch tensors, call tensor-indeterministic-act, and convert result back"
+  [actor x]
+  (let [{:keys [action logprob]} (tensor-indeterministic-act actor (tensor x))]
+    {:action (tolist action) :logprob (tolist logprob)}))
