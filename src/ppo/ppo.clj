@@ -10,6 +10,7 @@
   (loop [state             (environment-factory)
          observations      []
          actions           []
+         logprobs          []
          next-observations []
          rewards           []
          dones             []
@@ -17,7 +18,8 @@
          i                 n]
     (if (pos? i)
       (let [observation      (environment-observation state)
-            action           (policy observation)
+            action           (:action (policy observation))
+            logprob          (:logprob (policy observation))
             reward           (environment-reward state action)
             done             (environment-done? state)
             truncate         (environment-truncate? state)
@@ -26,6 +28,7 @@
         (recur next-state
                (conj observations observation)
                (conj actions action)
+               (conj logprobs logprob)
                (conj next-observations next-observation)
                (conj rewards reward)
                (conj dones done)
@@ -33,6 +36,7 @@
                (dec i)))
       {:observations      observations
        :actions           actions
+       :logprobs          logprobs
        :next-observations next-observations
        :rewards           rewards
        :dones             dones

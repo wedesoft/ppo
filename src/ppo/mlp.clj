@@ -121,3 +121,13 @@
                       loss       (py. criterion __call__ prediction label)]
                   (py. loss backward)
                   (py. optimizer step)))))
+
+
+(defn indeterministic-act
+  "Sample action using actor network returning distribution"
+  [actor x]
+  (let [dist    (py. actor get_dist x)
+        sample  (py. dist sample)
+        action  (torch/clamp sample -1.0 1.0)
+        logprob (py. dist log_prob action)]
+    {:action action :logprob logprob}))

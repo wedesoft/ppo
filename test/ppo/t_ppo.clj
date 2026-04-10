@@ -15,21 +15,24 @@
 
 
 (defn test-env-factory [] (constantly (->TestEnvironment 1)))
-(defn stop-at-102 [observation] (if (>= (first observation) 102) [0] [1]))
-(defn feedback-state [observation] [(- (first observation) 100)])
+(defn constant-value [a] (fn [observation] {:action [a] :logprob [0]}))
+(defn stop-at-102 [observation] {:action (if (>= (first observation) 102) [0] [1]) :logprob [0]})
+(defn feedback-state [observation] {:action [(- (first observation) 100)] :logprob [(- 100 (first observation))]})
 
 (facts "Generate samples from environment"
-       (:observations (sample-environment (test-env-factory) (constantly [0]) 1)) => [[101]]
-       (:observations (sample-environment (test-env-factory) (constantly [0]) 2)) => [[101] [101]]
-       (:observations (sample-environment (test-env-factory) (constantly [1]) 2)) => [[101] [102]]
+       (:observations (sample-environment (test-env-factory) (constant-value 0) 1)) => [[101]]
+       (:observations (sample-environment (test-env-factory) (constant-value 0) 2)) => [[101] [101]]
+       (:observations (sample-environment (test-env-factory) (constant-value 1) 2)) => [[101] [102]]
        (:observations (sample-environment (test-env-factory) stop-at-102 3)) => [[101] [102] [102]]
-       (:rewards (sample-environment (test-env-factory) (constantly [1]) 5)) => [-4 -3 -2 -1 0]
-       (:dones (sample-environment (test-env-factory) (constantly [3]) 4)) => [false false false true]
-       (:observations (sample-environment (test-env-factory) (constantly [3]) 5)) => [[101] [104] [107] [110] [101]]
-       (:truncates (sample-environment (test-env-factory) (constantly [-1]) 3)) => [false false true]
-       (:observations (sample-environment (test-env-factory) (constantly [-1]) 4)) => [[101] [100] [99] [101]]
-       (:next-observations (sample-environment (test-env-factory) (constantly [3]) 5)) => [[104] [107] [110] [101] [104]]
-       (:actions (sample-environment (test-env-factory) feedback-state 3)) => [[1] [2] [4]])
+       (:rewards (sample-environment (test-env-factory) (constant-value 1) 5)) => [-4 -3 -2 -1 0]
+       (:dones (sample-environment (test-env-factory) (constant-value 3) 4)) => [false false false true]
+       (:observations (sample-environment (test-env-factory) (constant-value 3) 5)) => [[101] [104] [107] [110] [101]]
+       (:truncates (sample-environment (test-env-factory) (constant-value -1) 3)) => [false false true]
+       (:observations (sample-environment (test-env-factory) (constant-value -1) 4)) => [[101] [100] [99] [101]]
+       (:next-observations (sample-environment (test-env-factory) (constant-value 3) 5)) => [[104] [107] [110] [101] [104]]
+       (:actions (sample-environment (test-env-factory) feedback-state 3)) => [[1] [2] [4]]
+       (:logprobs (sample-environment (test-env-factory) (constant-value 0) 1))  => [[0]]
+       (:logprobs (sample-environment (test-env-factory) feedback-state 3)) => [[-1] [-2] [-4]])
 
 
 (defn linear-critic [observation] (first observation))
