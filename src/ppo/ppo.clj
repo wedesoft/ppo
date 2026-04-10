@@ -79,4 +79,4 @@
   "Probability ratios for a actions using updated policy and old policy"
   [{:keys [observations]} policy old-logprobs]
   (let [logprobs (:logprob (policy observations))]
-    (torch/exp (torch/sub logprobs old-logprobs))))
+    (torch/exp (py. (torch/sub logprobs old-logprobs) sum 1 :keepdim true))))

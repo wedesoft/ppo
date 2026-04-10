@@ -64,9 +64,14 @@
        (critic-target {:observations [[4]]} [3] linear-critic) => [7])
 
 
-(defn action-prob [p] (fn [observation] {:action [0] :logprob (tensor [[p]])}))
+(defn action-prob [p] (fn [observations] {:action [[0]] :logprob (tensor [[p]])}))
+(defn identity-prob [observations] {:action [[0]] :logprob observations})
 
 (facts "Probability ratios for a actions using updated policy and old policy"
-       (tolist (probability-ratios {:observations [[4]]} (action-prob 0) (tensor [[0.0]]))) => [[1.0]]
-       (tolist (probability-ratios {:observations [[4]]} (action-prob 0) (tensor [[1.0]]))) => [[0.3678794503211975]]
-       (tolist (probability-ratios {:observations [[4]]} (action-prob 1) (tensor [[0.0]]))) => [[2.7182817459106445]])
+       (tolist (probability-ratios {:observations (tensor [[4]])} (action-prob 0) (tensor [[0]]))) => [[1.0]]
+       (tolist (probability-ratios {:observations (tensor [[4]])} (action-prob 0) (tensor [[1]]))) => [[0.3678794503211975]]
+       (tolist (probability-ratios {:observations (tensor [[4]])} (action-prob 1) (tensor [[0]]))) => [[2.7182817459106445]]
+       (tolist (probability-ratios {:observations (tensor [[1]])} identity-prob (tensor [[0]]))) => [[2.7182817459106445]]
+       (tolist (probability-ratios {:observations (tensor [[2 3]])} identity-prob (tensor [[2 3]]))) => [[1.0]]
+       (tolist (probability-ratios {:observations (tensor [[0 1]])} identity-prob (tensor [[0 0]]))) => [[2.7182817459106445]]
+       (tolist (probability-ratios {:observations (tensor [[0 0]])} identity-prob (tensor [[0 1]]))) => [[0.3678794503211975]])
