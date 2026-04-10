@@ -1,7 +1,12 @@
 (ns ppo.ppo
     (:require
+      [libpython-clj2.require :refer (require-python)]
+      [libpython-clj2.python :refer (py.) :as py]
       [ppo.environment :refer (environment-observation environment-update environment-reward environment-done?
                                environment-truncate?)]))
+
+
+(require-python '[torch :as torch])
 
 
 (defn sample-environment
@@ -68,3 +73,10 @@
   "Determine target values for critic"
   [{:keys [observations]} advantages critic]
   (map (fn [observation advantage] (+ (critic observation) advantage)) observations advantages))
+
+
+(defn probability-ratios
+  "Probability ratios for a actions using updated policy and old policy"
+  [{:keys [observations]} policy old-logprobs]
+  (let [logprobs (:logprob (policy observations))]
+    (torch/exp (torch/sub logprobs old-logprobs))))

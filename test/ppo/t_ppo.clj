@@ -2,6 +2,7 @@
     (:require
       [midje.sweet :refer :all]
       [ppo.environment :refer (Environment)]
+      [ppo.mlp :refer (tensor tolist)]
       [ppo.ppo :refer :all]))
 
 
@@ -61,3 +62,11 @@
        (critic-target {:observations [[4]]} [2] (constantly 0)) => [2]
        (critic-target {:observations [[4]]} [0] linear-critic) => [4]
        (critic-target {:observations [[4]]} [3] linear-critic) => [7])
+
+
+(defn action-prob [p] (fn [observation] {:action [0] :logprob (tensor [[p]])}))
+
+(facts "Probability ratios for a actions using updated policy and old policy"
+       (tolist (probability-ratios {:observations [[4]]} (action-prob 0) (tensor [[0.0]]))) => [[1.0]]
+       (tolist (probability-ratios {:observations [[4]]} (action-prob 0) (tensor [[1.0]]))) => [[0.3678794503211975]]
+       (tolist (probability-ratios {:observations [[4]]} (action-prob 1) (tensor [[0.0]]))) => [[2.7182817459106445]])
