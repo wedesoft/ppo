@@ -18,8 +18,9 @@
          i                 n]
     (if (pos? i)
       (let [observation      (environment-observation state)
-            action           (:action (policy observation))
-            logprob          (:logprob (policy observation))
+            sample           (policy observation)
+            action           (:action sample)
+            logprob          (:logprob sample)
             reward           (environment-reward state action)
             done             (environment-done? state)
             truncate         (environment-truncate? state)
