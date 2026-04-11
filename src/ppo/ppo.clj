@@ -49,6 +49,14 @@
        :truncates         truncates})))
 
 
+(defn shuffle-samples
+  "Random shuffle of samples"
+  ([samples]
+   (shuffle-samples samples (shuffle (range (count samples)))))
+  ([samples indices]
+   (zipmap (keys samples) (map #(map % indices) (vals samples)))))
+
+
 (defn create-batches
   "Create mini batches from environment samples"
   [samples batch-size]

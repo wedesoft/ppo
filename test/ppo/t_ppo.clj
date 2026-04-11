@@ -43,6 +43,24 @@
         (count (:observations samples)) => 8))
 
 
+(facts "Random shuffle of samples"
+       (let [samples  {:observations [[101] [102] [103] [104]]
+                       :actions [[1] [2] [3] [4]]
+                       :logprobs [[-1] [-2] [-3] [-4]]
+                       :next-observations [[102] [103] [104] [105]]
+                       :rewards [-4 -3 -2 -1]
+                       :dones [false false false true]
+                       :truncates [false true false false]}
+             shuffled (shuffle-samples samples [0 3 2 1])]
+         (:observations shuffled) => [[101] [104] [103] [102]]
+         (:actions shuffled) => [[1] [4] [3] [2]]
+         (:logprobs shuffled) => [[-1] [-4] [-3] [-2]]
+         (:next-observations shuffled) => [[102] [105] [104] [103]]
+         (:rewards shuffled) => [-4 -1 -2 -3]
+         (:dones shuffled) => [false true false false]
+         (:truncates shuffled) => [false false false true]))
+
+
 (facts "Create batches from samples"
        (let [samples {:observations [[101] [102] [103] [104]]
                       :actions [[1] [2] [3] [4]]
