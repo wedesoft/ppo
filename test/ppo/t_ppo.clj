@@ -38,8 +38,9 @@
 
 (fact "Integration test sampling environment"
       (let [factory (test-env-factory)
-            actor   (Actor 1 5 1)]
-        (sample-environment (test-env-factory) (indeterministic-act actor) 8)))
+            actor   (Actor 1 5 1)
+            samples (sample-environment (test-env-factory) (indeterministic-act actor) 8)]
+        (count (:observations samples)) => 8))
 
 
 (defn linear-critic [observation] (first observation))
@@ -51,16 +52,18 @@
        (deltas {:observations [[2]] :next-observations [[1]] :rewards [1] :dones [false]} linear-critic 0.5) => [-0.5]
        (deltas {:observations [[4] [3]] :next-observations [[3] [2]] :rewards [2 3] :dones [false false]} linear-critic 1.0)
        => [1.0 2.0]
+       (deltas {:observations [[4]] :next-observations [[3]] :rewards [4] :dones [true]} linear-critic 1.0) => [0.0]
        (deltas {:observations [[4]] :next-observations [[3]] :rewards [4] :dones [true]} linear-critic 1.0) => [0.0])
 
 
 (facts "Compute advantages attributed to each action"
-       (advantages {:dones [false]} [0.0] 1.0 1.0) => [0.0]
-       (advantages {:dones [false]} [1.0] 1.0 1.0) => [1.0]
-       (advantages {:dones [false false]} [2.0 3.0] 1.0 1.0) => [5.0 3.0]
-       (advantages {:dones [false false]} [2.0 3.0] 0.5 1.0) => [3.5 3.0]
-       (advantages {:dones [false false]} [2.0 3.0] 1.0 0.5) => [3.5 3.0]
-       (advantages {:dones [true false]} [2.0 3.0] 1.0 1.0) => [2.0 3.0])
+       (advantages {:dones [false] :truncates [false]} [0.0] 1.0 1.0) => [0.0]
+       (advantages {:dones [false] :truncates [false]} [1.0] 1.0 1.0) => [1.0]
+       (advantages {:dones [false false] :truncates [false false]} [2.0 3.0] 1.0 1.0) => [5.0 3.0]
+       (advantages {:dones [false false] :truncates [false false]} [2.0 3.0] 0.5 1.0) => [3.5 3.0]
+       (advantages {:dones [false false] :truncates [false false]} [2.0 3.0] 1.0 0.5) => [3.5 3.0]
+       (advantages {:dones [true false] :truncates [false false]} [2.0 3.0] 1.0 1.0) => [2.0 3.0]
+       (advantages {:dones [false false] :truncates [true false]} [2.0 3.0] 1.0 1.0) => [2.0 3.0])
 
 
 (facts "Target values for critic"

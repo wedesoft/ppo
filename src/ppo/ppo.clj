@@ -59,14 +59,14 @@
 
 (defn advantages
   "Compute advantages attributed to each action"
-  [{:keys [dones]} deltas gamma lambda]
+  [{:keys [dones truncates]} deltas gamma lambda]
   (reverse
     (rest
       (reductions
-        (fn [advantage [delta done]]
-            (+ delta (if done 0.0 (* gamma lambda advantage))))
+        (fn [advantage [delta done truncate]]
+            (+ delta (if (or done truncate) 0.0 (* gamma lambda advantage))))
         0.0
-        (reverse (map vector deltas dones))))))
+        (reverse (map vector deltas dones truncates))))))
 
 
 (defn critic-target
