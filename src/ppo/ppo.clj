@@ -49,6 +49,12 @@
        :truncates         truncates})))
 
 
+(defn create-batches
+  "Create mini batches from environment samples"
+  [samples batch-size]
+  (zipmap (keys samples) (map #(partition-all batch-size %) (vals samples))))
+
+
 (defn deltas
   "Compute difference between actual reward plus discounted estimate of next state and estimated value of current state"
   [{:keys [observations next-observations rewards dones]} critic gamma]

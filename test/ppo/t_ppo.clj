@@ -43,6 +43,31 @@
         (count (:observations samples)) => 8))
 
 
+(facts "Create batches from samples"
+       (let [samples {:observations [[101] [102] [103] [104]]
+                      :actions [[1] [2] [3] [4]]
+                      :logprobs [[-1] [-2] [-3] [-4]]
+                      :next-observations [[102] [103] [104] [105]]
+                      :rewards [-4 -3 -2 -1]
+                      :dones [false false false true]
+                      :truncates [false true false false]}
+             batches (create-batches samples 2)]
+         (first (:observations batches)) => [[101] [102]]
+         (second (:observations batches)) => [[103] [104]]
+         (first (:actions batches)) => [[1] [2]]
+         (second (:actions batches)) => [[3] [4]]
+         (first (:logprobs batches)) => [[-1] [-2]]
+         (second (:logprobs batches)) => [[-3] [-4]]
+         (first (:next-observations batches)) => [[102] [103]]
+         (second (:next-observations batches)) => [[104] [105]]
+         (first (:rewards batches)) => [-4 -3]
+         (second (:rewards batches)) => [-2 -1]
+         (first (:dones batches)) => [false false]
+         (second (:dones batches)) => [false true]
+         (first (:truncates batches)) => [false true]
+         (second (:truncates batches)) => [false false]))
+
+
 (defn linear-critic [observation] (first observation))
 
 (facts "Compute difference between actual reward plus discounted estimate of next state and estimated value of current state"
