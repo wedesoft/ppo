@@ -85,7 +85,8 @@
 (defn clipped-surrogate-loss
   "Clipped surrogate loss (negative objective)"
   [probability-ratios advantages epsilon]
-  (torch/neg
-    (torch/min
-      (torch/mul probability-ratios advantages)
-      (torch/mul (torch/clamp probability-ratios (- 1.0 epsilon) (+ 1.0 epsilon)) advantages))))
+  (torch/mean
+    (torch/neg
+      (torch/min
+        (torch/mul probability-ratios advantages)
+        (torch/mul (torch/clamp probability-ratios (- 1.0 epsilon) (+ 1.0 epsilon)) advantages)))))
