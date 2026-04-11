@@ -2,7 +2,7 @@
     (:require
       [midje.sweet :refer :all]
       [ppo.environment :refer (Environment)]
-      [ppo.mlp :refer (tensor tolist Actor)]
+      [ppo.mlp :refer (tensor tolist Actor indeterministic-act)]
       [ppo.ppo :refer :all]))
 
 
@@ -39,7 +39,7 @@
 (fact "Integration test sampling environment"
       (let [factory (test-env-factory)
             actor   (Actor 1 5 1)]
-        (sample-environment (test-env-factory) actor 8)))
+        (sample-environment (test-env-factory) (indeterministic-act actor) 8)))
 
 
 (defn linear-critic [observation] (first observation))
