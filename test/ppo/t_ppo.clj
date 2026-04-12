@@ -114,7 +114,8 @@
        (critic-target {:observations [[4]]} [0] (constantly 0)) => [0]
        (critic-target {:observations [[4]]} [2] (constantly 0)) => [2]
        (critic-target {:observations [[4]]} [0] linear-critic) => [4]
-       (critic-target {:observations [[4]]} [3] linear-critic) => [7])
+       (critic-target {:observations [[4]]} [3] linear-critic) => [7]
+       (critic-target {:observations [[4] [3]]} [2 1] linear-critic) => [6 4])
 
 
 (defn action-prob [p] (fn [observations] {:action [[0]] :logprob (tensor [[p]])}))
@@ -150,7 +151,7 @@
             actor          (Actor 1 5 1)
             critic         (Critic 1 5)
             samples        (sample-environment (test-env-factory) (indeterministic-act actor) 8)
-            deltas         (deltas samples (fn [observation] (first (tolist (critic (tensor observation))))) 0.8)
+            deltas         (deltas samples (fn [observation] (tolist (critic (tensor observation)))) 0.8)
             advantages     (tensor (advantages samples deltas 0.8 1.0))
             tensor-samples {:observations (tensor (:observations samples)) :logprobs (tensor (:logprobs samples))}
             ratios         (probability-ratios tensor-samples (tensor-indeterministic-act actor) )

@@ -14,7 +14,7 @@
           (doseq [param (py. zero-critic parameters)]
                  (py. param zero_))
           (py. zero-critic eval)
-          (tolist (zero-critic (tensor [[0 0] [0 0] [0 0]]))) => [[0.0] [0.0] [0.0]])))
+          (tolist (zero-critic (tensor [[0 0] [0 0] [0 0]]))) => [0.0 0.0 0.0])))
 
 
 (fact "Mean square error cost function"
@@ -28,13 +28,13 @@
 (fact "Train network"
       (let [model     (Critic 1 2)
             optimizer (adam-optimizer model 0.1 0.001)
-            batches   [[(tensor [[0.0] [0.0]]) (tensor [[0.0] [0.0]])] [(tensor [[1.0] [1.0]]) (tensor [[1.0] [1.0]])]]
+            batches   [[(tensor [[0.0] [0.0]]) (tensor [0.0 0.0])] [(tensor [[1.0] [1.0]]) (tensor [1.0 1.0])]]
             criterion (mse-loss)]
         (py. model train)
         (train optimizer model criterion batches 100)
         (py. model eval)
         (without-gradient
-          (toitem (criterion (model (tensor [[0.0] [1.0]])) (tensor [[0.0] [1.0]]))) => (roughly 0.0 1e-3))))
+          (toitem (criterion (model (tensor [[0.0] [1.0]])) (tensor [0.0 1.0]))) => (roughly 0.0 1e-3))))
 
 
 (facts "Test actor network"

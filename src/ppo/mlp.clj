@@ -60,7 +60,7 @@
                  x (py. self fc2 x)
                  x (torch/tanh x)
                  x (py. self fc3 x)]
-             x)))}))
+             (torch/squeeze x -1))))}))
 
 
 (def Actor
