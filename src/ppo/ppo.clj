@@ -74,13 +74,14 @@
 (defn advantages
   "Compute advantages attributed to each action"
   [{:keys [dones truncates]} deltas gamma lambda]
-  (reverse
+  (vec
+    (reverse
     (rest
       (reductions
         (fn [advantage [delta done truncate]]
             (+ delta (if (or done truncate) 0.0 (* gamma lambda advantage))))
         0.0
-        (reverse (map vector deltas dones truncates))))))
+        (reverse (map vector deltas dones truncates)))))))
 
 
 (defn critic-target
@@ -93,7 +94,7 @@
   "Probability ratios for a actions using updated policy and old policy"
   [{:keys [observations logprobs]} policy]
   (let [updated-logprobs (:logprob (policy observations))]
-    (torch/exp (py. (torch/sub updated-logprobs logprobs) sum 1 :keepdim true))))
+    (torch/exp (py. (torch/sub updated-logprobs logprobs) sum 1))))
 
 
 (defn clipped-surrogate-loss

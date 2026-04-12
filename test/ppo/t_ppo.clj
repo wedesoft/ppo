@@ -106,7 +106,8 @@
        (advantages {:dones [false false] :truncates [false false]} [2.0 3.0] 0.5 1.0) => [3.5 3.0]
        (advantages {:dones [false false] :truncates [false false]} [2.0 3.0] 1.0 0.5) => [3.5 3.0]
        (advantages {:dones [true false] :truncates [false false]} [2.0 3.0] 1.0 1.0) => [2.0 3.0]
-       (advantages {:dones [false false] :truncates [true false]} [2.0 3.0] 1.0 1.0) => [2.0 3.0])
+       (advantages {:dones [false false] :truncates [true false]} [2.0 3.0] 1.0 1.0) => [2.0 3.0]
+       (advantages {:dones [false] :truncates [false]} [0.0] 1.0 1.0) => vector?)
 
 
 (facts "Target values for critic"
@@ -120,13 +121,13 @@
 (defn identity-prob [observations] {:action [[0]] :logprob observations})
 
 (facts "Probability ratios for a actions using updated policy and old policy"
-       (tolist (probability-ratios {:observations (tensor [[4]]) :logprobs (tensor [[0]])} (action-prob 0))) => [[1.0]]
-       (tolist (probability-ratios {:observations (tensor [[4]]) :logprobs (tensor [[1]])} (action-prob 0))) => [[0.3678794503211975]]
-       (tolist (probability-ratios {:observations (tensor [[4]]) :logprobs (tensor [[0]])} (action-prob 1))) => [[2.7182817459106445]]
-       (tolist (probability-ratios {:observations (tensor [[1]]) :logprobs (tensor [[0]])} identity-prob)) => [[2.7182817459106445]]
-       (tolist (probability-ratios {:observations (tensor [[2 3]]) :logprobs (tensor [[2 3]])} identity-prob)) => [[1.0]]
-       (tolist (probability-ratios {:observations (tensor [[0 1]]) :logprobs (tensor [[0 0]])} identity-prob)) => [[2.7182817459106445]]
-       (tolist (probability-ratios {:observations (tensor [[0 0]]) :logprobs (tensor [[0 1]])} identity-prob)) => [[0.3678794503211975]])
+       (tolist (probability-ratios {:observations (tensor [[4]]) :logprobs (tensor [[0]])} (action-prob 0))) => [1.0]
+       (tolist (probability-ratios {:observations (tensor [[4]]) :logprobs (tensor [[1]])} (action-prob 0))) => [0.3678794503211975]
+       (tolist (probability-ratios {:observations (tensor [[4]]) :logprobs (tensor [[0]])} (action-prob 1))) => [2.7182817459106445]
+       (tolist (probability-ratios {:observations (tensor [[1]]) :logprobs (tensor [[0]])} identity-prob)) => [2.7182817459106445]
+       (tolist (probability-ratios {:observations (tensor [[2 3]]) :logprobs (tensor [[2 3]])} identity-prob)) => [1.0]
+       (tolist (probability-ratios {:observations (tensor [[0 1]]) :logprobs (tensor [[0 0]])} identity-prob)) => [2.7182817459106445]
+       (tolist (probability-ratios {:observations (tensor [[0 0]]) :logprobs (tensor [[0 1]])} identity-prob)) => [0.3678794503211975])
 
 
 (facts "Clipped surrogate loss (negative objective)"
@@ -150,7 +151,8 @@
             critic         (Critic 1 5)
             samples        (sample-environment (test-env-factory) (indeterministic-act actor) 8)
             deltas         (deltas samples (fn [observation] (first (tolist (critic (tensor observation))))) 0.8)
-            advantages     (advantages samples deltas 0.8 1.0)
+            advantages     (tensor (advantages samples deltas 0.8 1.0))
             tensor-samples {:observations (tensor (:observations samples)) :logprobs (tensor (:logprobs samples))}
-            ratios         (probability-ratios tensor-samples (tensor-indeterministic-act actor) )]
-        (println advantages)))
+            ratios         (probability-ratios tensor-samples (tensor-indeterministic-act actor) )
+            loss           (tolist (clipped-surrogate-loss ratios advantages 0.2))]
+        loss => number?))
