@@ -1,8 +1,9 @@
 (ns ppo.t-ppo
     (:require
       [midje.sweet :refer :all]
+      [libpython-clj2.python :refer (py.) :as py]
       [ppo.environment :refer (Environment)]
-      [ppo.mlp :refer (tensor tolist Actor Critic indeterministic-act logprob-of-action)]
+      [ppo.mlp :refer (tensor tolist Actor Critic indeterministic-act logprob-of-action adam-optimizer)]
       [ppo.ppo :refer :all]))
 
 
@@ -166,6 +167,11 @@
             tensor-samples {:observations (tensor (:observations samples))
                             :logprobs (tensor (:logprobs samples))
                             :actions (tensor (:actions samples))}
+            optimizer      (adam-optimizer actor 0.1 0.001)
+            _              (py. optimizer zero_grad)
             ratios         (probability-ratios tensor-samples (logprob-of-action actor) )
-            loss           (tolist (clipped-surrogate-loss ratios advantages 0.2))]
-        loss => number?))
+            loss           (clipped-surrogate-loss ratios advantages 0.2)
+            _              (py. loss backward)
+            _              (py. optimizer step)
+            updated-loss   (clipped-surrogate-loss (probability-ratios tensor-samples (logprob-of-action actor)) advantages 0.2)]
+        (tolist updated-loss) => #(< % (tolist loss))))
