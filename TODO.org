@@ -1,0 +1,4 @@
+#+TITLE: TODO
+#+AUTHOR: Jan Wedekind
+* TODO [#A] integration test for actor training step
+* TODO [#A] single training step method for critic
