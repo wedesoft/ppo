@@ -31,7 +31,8 @@
             batches   [[(tensor [[0.0] [0.0]]) (tensor [0.0 0.0])] [(tensor [[1.0] [1.0]]) (tensor [1.0 1.0])]]
             criterion (mse-loss)]
         (py. model train)
-        (train optimizer model criterion batches 100)
+        (doseq [epoch (range 100)]
+               (train-epoch optimizer model criterion batches))
         (py. model eval)
         (without-gradient
           (toitem (criterion (model (tensor [[0.0] [1.0]])) (tensor [0.0 1.0]))) => (roughly 0.0 1e-3))))
@@ -49,7 +50,9 @@
            (tolist (py. zero-actor deterministic_act (tensor [[0 0]]))) => [[0.0]]
            (tolist (py/py.- (py. zero-actor get_dist (tensor [[0 0]])) mean)) => [[0.0]]
            (tolist (py/py.- (py. zero-actor get_dist (tensor [[0 0]])) stddev)) => [[0.6931471824645996]]
-           (:action (tolist ((tensor-indeterministic-act zero-actor) (tensor [[0 0]])))) => some?
-           (:logprob (tolist ((tensor-indeterministic-act zero-actor) (tensor [[0 0]])))) => some?
+           (let [result ((tensor-indeterministic-act zero-actor) (tensor [[0 0]]))]
+             (tolist (:action result)) => some?
+             (tolist (:logprob result)) => some?
+             (tolist ((logprob-of-action zero-actor) (tensor [[0 0]]) (:action result))) => (tolist (:logprob result)))
            (:action ((indeterministic-act zero-actor) [[0 0]])) => some?
            (:logprob ((indeterministic-act zero-actor) [[0 0]])) => some?)))

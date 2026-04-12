@@ -92,8 +92,8 @@
 
 (defn probability-ratios
   "Probability ratios for a actions using updated policy and old policy"
-  [{:keys [observations logprobs]} policy]
-  (let [updated-logprobs (:logprob (policy observations))]
+  [{:keys [observations logprobs actions]} logprob-of-action]
+  (let [updated-logprobs (logprob-of-action observations actions)]
     (torch/exp (py. (torch/sub updated-logprobs logprobs) sum 1))))
 
 

@@ -111,16 +111,15 @@
   (optim/Adam (py. model parameters) :lr learning-rate :weight_decay weight-decay))
 
 
-(defn train
+(defn train-epoch
   "Train network for specified number of epochs"
-  [optimizer model criterion batches epochs]
-  (doseq [epoch (range epochs)]
-         (doseq [[data label] batches]
-                (py. optimizer zero_grad)
-                (let [prediction (py. model __call__ data)
-                      loss       (py. criterion __call__ prediction label)]
-                  (py. loss backward)
-                  (py. optimizer step)))))
+  [optimizer model criterion batches]
+  (doseq [[data label] batches]
+         (py. optimizer zero_grad)
+         (let [prediction (py. model __call__ data)
+               loss       (py. criterion __call__ prediction label)]
+           (py. loss backward)
+           (py. optimizer step))))
 
 
 (defn tensor-indeterministic-act
@@ -132,6 +131,14 @@
             action  (torch/clamp sample -1.0 1.0)
             logprob (py. dist log_prob action)]
         {:action action :logprob logprob})))
+
+
+(defn logprob-of-action
+  "Get log probability of action"
+  [actor]
+  (fn [observation action]
+      (let [dist (py. actor get_dist observation)]
+        (py. dist log_prob action))))
 
 
 (defn indeterministic-act
