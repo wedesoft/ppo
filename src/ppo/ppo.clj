@@ -54,7 +54,7 @@
   ([samples]
    (shuffle-samples samples (shuffle (range (count samples)))))
   ([samples indices]
-   (zipmap (keys samples) (map #(map % indices) (vals samples)))))
+   (zipmap (keys samples) (map #(mapv % indices) (vals samples)))))
 
 
 (defn create-batches
@@ -87,7 +87,7 @@
 (defn critic-target
   "Determine target values for critic"
   [{:keys [observations]} advantages critic]
-  (map (fn [observation advantage] (+ (critic observation) advantage)) observations advantages))
+  (mapv (fn [observation advantage] (+ (critic observation) advantage)) observations advantages))
 
 
 (defn probability-ratios

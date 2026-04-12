@@ -3,7 +3,7 @@
       [midje.sweet :refer :all]
       [libpython-clj2.python :refer (py.) :as py]
       [ppo.environment :refer (Environment)]
-      [ppo.mlp :refer (tensor tolist Actor Critic indeterministic-act logprob-of-action adam-optimizer)]
+      [ppo.mlp :refer (tensor tolist Actor Critic indeterministic-act logprob-of-action adam-optimizer mse-loss)]
       [ppo.ppo :refer :all]))
 
 
@@ -59,7 +59,8 @@
          (:next-observations shuffled) => [[102] [105] [104] [103]]
          (:rewards shuffled) => [-4 -1 -2 -3]
          (:dones shuffled) => [false true false false]
-         (:truncates shuffled) => [false false false true]))
+         (:truncates shuffled) => [false false false true]
+         (:observations shuffled) => vector?))
 
 
 (facts "Create batches from samples"
@@ -116,7 +117,8 @@
        (critic-target {:observations [[4]]} [2] (constantly 0)) => [2]
        (critic-target {:observations [[4]]} [0] linear-critic) => [4]
        (critic-target {:observations [[4]]} [3] linear-critic) => [7]
-       (critic-target {:observations [[4] [3]]} [2 1] linear-critic) => [6 4])
+       (critic-target {:observations [[4] [3]]} [2 1] linear-critic) => [6 4]
+       (critic-target {:observations [[4]]} [0] (constantly 0)) => vector?)
 
 
 (defn action-prob [p] (fn [observations actions] (tensor [[p]])))
@@ -157,11 +159,30 @@
        (tolist (clipped-surrogate-loss (tensor [[2.0]]) (tensor [[-3.0]]) 0.25)) => 6.0)
 
 
+(fact "Integration test critic training step"
+      (let [factory        (test-env-factory)
+            actor          (Actor 1 5 1)
+            critic         (Critic 1 5)
+            samples        (shuffle-samples (sample-environment (test-env-factory) (indeterministic-act actor) 32))
+            deltas         (deltas samples (fn [observation] (tolist (critic (tensor observation)))) 0.8)
+            advantages     (advantages samples deltas 0.8 1.0)
+            tensor-samples {:observations (tensor (:observations samples))}
+            target         (tensor (critic-target samples advantages (fn [observation] (tolist (critic (tensor observation))))))
+            optimizer      (adam-optimizer critic 0.1 0.001)
+            criterion      (mse-loss)
+            _              (py. optimizer zero_grad)
+            loss           (criterion (critic (:observations tensor-samples)) target)
+            _              (py. loss backward)
+            _              (py. optimizer step)
+            updated-loss   (criterion (critic (:observations tensor-samples)) target)]
+        (tolist updated-loss) => #(< % (tolist loss))))
+
+
 (fact "Integration test actor training step"
       (let [factory        (test-env-factory)
             actor          (Actor 1 5 1)
             critic         (Critic 1 5)
-            samples        (sample-environment (test-env-factory) (indeterministic-act actor) 8)
+            samples        (shuffle-samples (sample-environment (test-env-factory) (indeterministic-act actor) 8))
             deltas         (deltas samples (fn [observation] (tolist (critic (tensor observation)))) 0.8)
             advantages     (tensor (advantages samples deltas 0.8 1.0))
             tensor-samples {:observations (tensor (:observations samples))

@@ -116,8 +116,8 @@
   [optimizer model criterion batches]
   (doseq [[data label] batches]
          (py. optimizer zero_grad)
-         (let [prediction (py. model __call__ data)
-               loss       (py. criterion __call__ prediction label)]
+         (let [prediction (model data)
+               loss       (criterion prediction label)]
            (py. loss backward)
            (py. optimizer step))))
 
