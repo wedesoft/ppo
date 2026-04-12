@@ -2,7 +2,7 @@
     (:require
       [midje.sweet :refer :all]
       [ppo.environment :refer (Environment)]
-      [ppo.mlp :refer (tensor tolist Actor tensor-indeterministic-act indeterministic-act)]
+      [ppo.mlp :refer (tensor tolist Actor Critic tensor-indeterministic-act indeterministic-act)]
       [ppo.ppo :refer :all]))
 
 
@@ -142,3 +142,15 @@
        (tolist (clipped-surrogate-loss (tensor [[0.75]]) (tensor [[-3.0]]) 0.25)) => 2.25
        (tolist (clipped-surrogate-loss (tensor [[0.0]]) (tensor [[-3.0]]) 0.25)) => 2.25
        (tolist (clipped-surrogate-loss (tensor [[2.0]]) (tensor [[-3.0]]) 0.25)) => 6.0)
+
+
+(fact "Integration test actor training step"
+      (let [factory        (test-env-factory)
+            actor          (Actor 1 5 1)
+            critic         (Critic 1 5)
+            samples        (sample-environment (test-env-factory) (indeterministic-act actor) 8)
+            deltas         (deltas samples (fn [observation] (first (tolist (critic (tensor observation))))) 0.8)
+            advantages     (advantages samples deltas 0.8 1.0)
+            tensor-samples {:observations (tensor (:observations samples)) :logprobs (tensor (:logprobs samples))}
+            ratios         (probability-ratios tensor-samples (tensor-indeterministic-act actor) )]
+        (println advantages)))
