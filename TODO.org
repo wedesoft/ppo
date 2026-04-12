@@ -1,5 +1,6 @@
 #+TITLE: TODO
 #+AUTHOR: Jan Wedekind
+* TODO [#A] actor training should not act indeterministically but compute logprob of previously chosen action
 * TODO [#A] single training step method for critic
 * TODO [#A] integration test for critic training step
 * TODO [#A] integration test for actor training step
