@@ -91,9 +91,9 @@
 
 (defn probability-ratios
   "Probability ratios for a actions using updated policy and old policy"
-  [{:keys [observations]} policy old-logprobs]
-  (let [logprobs (:logprob (policy observations))]
-    (torch/exp (py. (torch/sub logprobs old-logprobs) sum 1 :keepdim true))))
+  [{:keys [observations logprobs]} policy]
+  (let [updated-logprobs (:logprob (policy observations))]
+    (torch/exp (py. (torch/sub updated-logprobs logprobs) sum 1 :keepdim true))))
 
 
 (defn clipped-surrogate-loss

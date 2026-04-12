@@ -2,7 +2,7 @@
     (:require
       [midje.sweet :refer :all]
       [ppo.environment :refer (Environment)]
-      [ppo.mlp :refer (tensor tolist Actor indeterministic-act)]
+      [ppo.mlp :refer (tensor tolist Actor tensor-indeterministic-act indeterministic-act)]
       [ppo.ppo :refer :all]))
 
 
@@ -120,13 +120,13 @@
 (defn identity-prob [observations] {:action [[0]] :logprob observations})
 
 (facts "Probability ratios for a actions using updated policy and old policy"
-       (tolist (probability-ratios {:observations (tensor [[4]])} (action-prob 0) (tensor [[0]]))) => [[1.0]]
-       (tolist (probability-ratios {:observations (tensor [[4]])} (action-prob 0) (tensor [[1]]))) => [[0.3678794503211975]]
-       (tolist (probability-ratios {:observations (tensor [[4]])} (action-prob 1) (tensor [[0]]))) => [[2.7182817459106445]]
-       (tolist (probability-ratios {:observations (tensor [[1]])} identity-prob (tensor [[0]]))) => [[2.7182817459106445]]
-       (tolist (probability-ratios {:observations (tensor [[2 3]])} identity-prob (tensor [[2 3]]))) => [[1.0]]
-       (tolist (probability-ratios {:observations (tensor [[0 1]])} identity-prob (tensor [[0 0]]))) => [[2.7182817459106445]]
-       (tolist (probability-ratios {:observations (tensor [[0 0]])} identity-prob (tensor [[0 1]]))) => [[0.3678794503211975]])
+       (tolist (probability-ratios {:observations (tensor [[4]]) :logprobs (tensor [[0]])} (action-prob 0))) => [[1.0]]
+       (tolist (probability-ratios {:observations (tensor [[4]]) :logprobs (tensor [[1]])} (action-prob 0))) => [[0.3678794503211975]]
+       (tolist (probability-ratios {:observations (tensor [[4]]) :logprobs (tensor [[0]])} (action-prob 1))) => [[2.7182817459106445]]
+       (tolist (probability-ratios {:observations (tensor [[1]]) :logprobs (tensor [[0]])} identity-prob)) => [[2.7182817459106445]]
+       (tolist (probability-ratios {:observations (tensor [[2 3]]) :logprobs (tensor [[2 3]])} identity-prob)) => [[1.0]]
+       (tolist (probability-ratios {:observations (tensor [[0 1]]) :logprobs (tensor [[0 0]])} identity-prob)) => [[2.7182817459106445]]
+       (tolist (probability-ratios {:observations (tensor [[0 0]]) :logprobs (tensor [[0 1]])} identity-prob)) => [[0.3678794503211975]])
 
 
 (facts "Clipped surrogate loss (negative objective)"

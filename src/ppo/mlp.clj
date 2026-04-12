@@ -126,8 +126,8 @@
 (defn tensor-indeterministic-act
   "Sample action using actor network returning distribution"
   [actor]
-  (fn tensor-indeterministic-act [x]
-      (let [dist    (py. actor get_dist x)
+  (fn tensor-indeterministic-act [observation]
+      (let [dist    (py. actor get_dist observation)
             sample  (py. dist sample)
             action  (torch/clamp sample -1.0 1.0)
             logprob (py. dist log_prob action)]
@@ -138,6 +138,6 @@
   "Perform conversions to torch tensors, call tensor-indeterministic-act, and convert result back"
   [actor]
   (let [tensor-indeterministic-act (tensor-indeterministic-act actor)]
-    (fn inteterministic-action [x]
-        (let [{:keys [action logprob]} (tensor-indeterministic-act (tensor x))]
+    (fn inteterministic-action [observation]
+        (let [{:keys [action logprob]} (tensor-indeterministic-act (tensor observation))]
           {:action (tolist action) :logprob (tolist logprob)}))))
