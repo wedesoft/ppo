@@ -3,7 +3,7 @@
       [midje.sweet :refer :all]
       [libpython-clj2.python :refer (py.) :as py]
       [ppo.environment :refer (Environment)]
-      [ppo.mlp :refer (tensor tolist Actor Critic indeterministic-act logprob-of-action adam-optimizer mse-loss)]
+      [ppo.mlp :refer (tensor tolist Actor Critic indeterministic-act logprob-of-action adam-optimizer mse-loss without-gradient)]
       [ppo.ppo :refer :all]))
 
 
@@ -163,13 +163,13 @@
       (let [factory        (test-env-factory)
             actor          (Actor 1 5 1)
             critic         (Critic 1 5)
-            samples        (create-batches (shuffle-samples (sample-environment (test-env-factory) (indeterministic-act actor) 32)) 8)
+            samples        (without-gradient (create-batches (shuffle-samples (sample-environment factory (indeterministic-act actor) 32)) 8))
             batch          (first samples)
-            deltas         (deltas batch (fn [observation] (tolist (critic (tensor observation)))) 0.8)
-            advantages     (advantages batch deltas 0.8 1.0)
+            deltas         (without-gradient (deltas batch (fn [observation] (tolist (critic (tensor observation)))) 0.8))
+            advantages     (tensor (advantages batch deltas 0.8 0.0))
             tensor-batch   {:observations (tensor (:observations batch))}
-            target         (critic-target tensor-batch (tensor advantages) critic)
-            optimizer      (adam-optimizer critic 0.01 0.001)
+            target         (without-gradient (critic-target tensor-batch advantages critic))
+            optimizer      (adam-optimizer critic 0.1 0.0)
             criterion      (mse-loss)
             _              (py. optimizer zero_grad)
             loss           (criterion (critic (:observations tensor-batch)) target)
@@ -183,14 +183,14 @@
       (let [factory        (test-env-factory)
             actor          (Actor 1 5 1)
             critic         (Critic 1 5)
-            samples        (create-batches (shuffle-samples (sample-environment (test-env-factory) (indeterministic-act actor) 32)) 8)
+            samples        (without-gradient (create-batches (shuffle-samples (sample-environment factory (indeterministic-act actor) 32)) 8))
             batch          (first samples)
-            deltas         (deltas batch (fn [observation] (tolist (critic (tensor observation)))) 0.8)
-            advantages     (tensor (advantages batch deltas 0.8 1.0))
+            deltas         (without-gradient (deltas batch (fn [observation] (tolist (critic (tensor observation)))) 0.8))
+            advantages     (tensor (advantages batch deltas 0.8 0.0))
             tensor-batch   {:observations (tensor (:observations batch))
                             :logprobs (tensor (:logprobs batch))
                             :actions (tensor (:actions batch))}
-            optimizer      (adam-optimizer actor 0.01 0.001)
+            optimizer      (adam-optimizer actor 0.1 0.0)
             _              (py. optimizer zero_grad)
             ratios         (probability-ratios tensor-batch (logprob-of-action actor) )
             loss           (clipped-surrogate-loss ratios advantages 0.2)
