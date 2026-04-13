@@ -60,7 +60,7 @@
 (defn create-batches
   "Create mini batches from environment samples"
   [samples batch-size]
-  (apply mapv (fn [& args] (zipmap (keys samples) args)) (map #(partition-all batch-size %) (vals samples))))
+  (apply mapv (fn [& args] (zipmap (keys samples) (map vec args))) (map #(partition-all batch-size %) (vals samples))))
 
 
 (defn deltas

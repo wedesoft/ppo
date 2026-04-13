@@ -85,7 +85,8 @@
          (:dones (first batches)) => [false false]
          (:dones (second batches)) => [false true]
          (:truncates (first batches)) => [false true]
-         (:truncates (second batches)) => [false false]))
+         (:truncates (second batches)) => [false false]
+         (:observations (first batches)) => vector?))
 
 
 (defn linear-critic [observation] (first observation))
@@ -163,18 +164,19 @@
       (let [factory        (test-env-factory)
             actor          (Actor 1 5 1)
             critic         (Critic 1 5)
-            samples        (shuffle-samples (sample-environment (test-env-factory) (indeterministic-act actor) 32))
-            deltas         (deltas samples (fn [observation] (tolist (critic (tensor observation)))) 0.8)
-            advantages     (advantages samples deltas 0.8 1.0)
-            tensor-samples {:observations (tensor (:observations samples))}
-            target         (tensor (critic-target samples advantages (fn [observation] (tolist (critic (tensor observation))))))
+            samples        (create-batches (shuffle-samples (sample-environment (test-env-factory) (indeterministic-act actor) 32)) 8)
+            batch          (first samples)
+            deltas         (deltas batch (fn [observation] (tolist (critic (tensor observation)))) 0.8)
+            advantages     (advantages batch deltas 0.8 1.0)
+            tensor-batch   {:observations (tensor (:observations batch))}
+            target         (tensor (critic-target batch advantages (fn [observation] (tolist (critic (tensor observation))))))
             optimizer      (adam-optimizer critic 0.01 0.001)
             criterion      (mse-loss)
             _              (py. optimizer zero_grad)
-            loss           (criterion (critic (:observations tensor-samples)) target)
+            loss           (criterion (critic (:observations tensor-batch)) target)
             _              (py. loss backward)
             _              (py. optimizer step)
-            updated-loss   (criterion (critic (:observations tensor-samples)) target)]
+            updated-loss   (criterion (critic (:observations tensor-batch)) target)]
         (tolist updated-loss) => #(< % (tolist loss))))
 
 
@@ -182,17 +184,18 @@
       (let [factory        (test-env-factory)
             actor          (Actor 1 5 1)
             critic         (Critic 1 5)
-            samples        (shuffle-samples (sample-environment (test-env-factory) (indeterministic-act actor) 8))
-            deltas         (deltas samples (fn [observation] (tolist (critic (tensor observation)))) 0.8)
-            advantages     (tensor (advantages samples deltas 0.8 1.0))
-            tensor-samples {:observations (tensor (:observations samples))
-                            :logprobs (tensor (:logprobs samples))
-                            :actions (tensor (:actions samples))}
+            samples        (create-batches (shuffle-samples (sample-environment (test-env-factory) (indeterministic-act actor) 32)) 8)
+            batch          (first samples)
+            deltas         (deltas batch (fn [observation] (tolist (critic (tensor observation)))) 0.8)
+            advantages     (tensor (advantages batch deltas 0.8 1.0))
+            tensor-batch   {:observations (tensor (:observations batch))
+                            :logprobs (tensor (:logprobs batch))
+                            :actions (tensor (:actions batch))}
             optimizer      (adam-optimizer actor 0.01 0.001)
             _              (py. optimizer zero_grad)
-            ratios         (probability-ratios tensor-samples (logprob-of-action actor) )
+            ratios         (probability-ratios tensor-batch (logprob-of-action actor) )
             loss           (clipped-surrogate-loss ratios advantages 0.2)
             _              (py. loss backward)
             _              (py. optimizer step)
-            updated-loss   (clipped-surrogate-loss (probability-ratios tensor-samples (logprob-of-action actor)) advantages 0.2)]
+            updated-loss   (clipped-surrogate-loss (probability-ratios tensor-batch (logprob-of-action actor)) advantages 0.2)]
         (tolist updated-loss) => #(< % (tolist loss))))
