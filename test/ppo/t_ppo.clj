@@ -72,20 +72,20 @@
                       :dones [false false false true]
                       :truncates [false true false false]}
              batches (create-batches samples 2)]
-         (first (:observations batches)) => [[101] [102]]
-         (second (:observations batches)) => [[103] [104]]
-         (first (:actions batches)) => [[1] [2]]
-         (second (:actions batches)) => [[3] [4]]
-         (first (:logprobs batches)) => [[-1] [-2]]
-         (second (:logprobs batches)) => [[-3] [-4]]
-         (first (:next-observations batches)) => [[102] [103]]
-         (second (:next-observations batches)) => [[104] [105]]
-         (first (:rewards batches)) => [-4 -3]
-         (second (:rewards batches)) => [-2 -1]
-         (first (:dones batches)) => [false false]
-         (second (:dones batches)) => [false true]
-         (first (:truncates batches)) => [false true]
-         (second (:truncates batches)) => [false false]))
+         (:observations (first batches)) => [[101] [102]]
+         (:observations (second batches)) => [[103] [104]]
+         (:actions (first batches)) => [[1] [2]]
+         (:actions (second batches)) => [[3] [4]]
+         (:logprobs (first batches)) => [[-1] [-2]]
+         (:logprobs (second batches)) => [[-3] [-4]]
+         (:next-observations (first batches)) => [[102] [103]]
+         (:next-observations (second batches)) => [[104] [105]]
+         (:rewards (first batches)) => [-4 -3]
+         (:rewards (second batches)) => [-2 -1]
+         (:dones (first batches)) => [false false]
+         (:dones (second batches)) => [false true]
+         (:truncates (first batches)) => [false true]
+         (:truncates (second batches)) => [false false]))
 
 
 (defn linear-critic [observation] (first observation))
@@ -168,7 +168,7 @@
             advantages     (advantages samples deltas 0.8 1.0)
             tensor-samples {:observations (tensor (:observations samples))}
             target         (tensor (critic-target samples advantages (fn [observation] (tolist (critic (tensor observation))))))
-            optimizer      (adam-optimizer critic 0.1 0.001)
+            optimizer      (adam-optimizer critic 0.01 0.001)
             criterion      (mse-loss)
             _              (py. optimizer zero_grad)
             loss           (criterion (critic (:observations tensor-samples)) target)
@@ -188,7 +188,7 @@
             tensor-samples {:observations (tensor (:observations samples))
                             :logprobs (tensor (:logprobs samples))
                             :actions (tensor (:actions samples))}
-            optimizer      (adam-optimizer actor 0.1 0.001)
+            optimizer      (adam-optimizer actor 0.01 0.001)
             _              (py. optimizer zero_grad)
             ratios         (probability-ratios tensor-samples (logprob-of-action actor) )
             loss           (clipped-surrogate-loss ratios advantages 0.2)
