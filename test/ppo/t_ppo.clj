@@ -114,12 +114,11 @@
 
 
 (facts "Target values for critic"
-       (critic-target {:observations [[4]]} [0] (constantly 0)) => [0]
-       (critic-target {:observations [[4]]} [2] (constantly 0)) => [2]
-       (critic-target {:observations [[4]]} [0] linear-critic) => [4]
-       (critic-target {:observations [[4]]} [3] linear-critic) => [7]
-       (critic-target {:observations [[4] [3]]} [2 1] linear-critic) => [6 4]
-       (critic-target {:observations [[4]]} [0] (constantly 0)) => vector?)
+       (tolist (critic-target {:observations (tensor [[4]])} (tensor [0]) (constantly (tensor [0])))) => [0.0]
+       (tolist (critic-target {:observations (tensor [[4]])} (tensor [2]) (constantly (tensor [0])))) => [2.0]
+       (tolist (critic-target {:observations (tensor [[4]])} (tensor [0]) #(torch/squeeze % -1))) => [4.0]
+       (tolist (critic-target {:observations (tensor [[4]])} (tensor [3]) #(torch/squeeze % -1))) => [7.0]
+       (tolist (critic-target {:observations (tensor [[4] [3]])} (tensor [2 1]) #(torch/squeeze % -1))) => [6.0 4.0])
 
 
 (defn action-prob [p] (fn [observations actions] (tensor [[p]])))
@@ -169,7 +168,7 @@
             deltas         (deltas batch (fn [observation] (tolist (critic (tensor observation)))) 0.8)
             advantages     (advantages batch deltas 0.8 1.0)
             tensor-batch   {:observations (tensor (:observations batch))}
-            target         (tensor (critic-target batch advantages (fn [observation] (tolist (critic (tensor observation))))))
+            target         (critic-target tensor-batch (tensor advantages) critic)
             optimizer      (adam-optimizer critic 0.01 0.001)
             criterion      (mse-loss)
             _              (py. optimizer zero_grad)

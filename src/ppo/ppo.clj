@@ -87,7 +87,7 @@
 (defn critic-target
   "Determine target values for critic"
   [{:keys [observations]} advantages critic]
-  (mapv (fn [observation advantage] (+ (critic observation) advantage)) observations advantages))
+  (torch/add (critic observations) advantages))
 
 
 (defn probability-ratios
