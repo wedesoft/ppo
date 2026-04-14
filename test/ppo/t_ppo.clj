@@ -3,7 +3,8 @@
       [midje.sweet :refer :all]
       [libpython-clj2.python :refer (py.) :as py]
       [ppo.environment :refer (Environment)]
-      [ppo.mlp :refer (tensor tolist Actor Critic indeterministic-act logprob-of-action adam-optimizer mse-loss without-gradient)]
+      [ppo.mlp :refer (tensor tolist Actor Critic indeterministic-act logprob-of-action adam-optimizer mse-loss without-gradient
+                       critic-observation)]
       [ppo.ppo :refer :all]))
 
 
@@ -171,8 +172,8 @@
             critic         (Critic 1 5)
             samples        (sample-shuffle-and-batch factory (indeterministic-act actor) 32 8)
             batch          (first samples)
-            deltas         (without-gradient (deltas batch (fn [observation] (tolist (critic (tensor observation)))) 0.8))
-            advantages     (tensor (advantages batch deltas 0.8 0.0))
+            deltas         (deltas batch (critic-observation critic) 0.8)
+            advantages     (tensor (advantages batch deltas 0.8 0.5))
             tensor-batch   {:observations (tensor (:observations batch))}
             target         (without-gradient (critic-target tensor-batch advantages critic))
             optimizer      (adam-optimizer critic 0.1 0.0)
@@ -191,8 +192,8 @@
             critic         (Critic 1 5)
             samples        (sample-shuffle-and-batch factory (indeterministic-act actor) 32 8)
             batch          (first samples)
-            deltas         (without-gradient (deltas batch (fn [observation] (tolist (critic (tensor observation)))) 0.8))
-            advantages     (tensor (advantages batch deltas 0.8 0.0))
+            deltas         (deltas batch (critic-observation critic) 0.8)
+            advantages     (tensor (advantages batch deltas 0.8 0.5))
             tensor-batch   {:observations (tensor (:observations batch))
                             :logprobs (tensor (:logprobs batch))
                             :actions (tensor (:actions batch))}

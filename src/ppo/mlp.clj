@@ -122,6 +122,13 @@
            (py. optimizer step))))
 
 
+(defn critic-observation
+  "Use critic with Clojure datatypes"
+  [critic]
+  (fn [observation]
+      (tolist (without-gradient (critic (tensor observation))))))
+
+
 (defn tensor-indeterministic-act
   "Sample action using actor network returning distribution"
   [actor]

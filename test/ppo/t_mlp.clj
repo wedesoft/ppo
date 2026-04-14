@@ -38,6 +38,11 @@
           (toitem (criterion (model (tensor [[0.0] [1.0]])) (tensor [0.0 1.0]))) => (roughly 0.0 1e-3))))
 
 
+(fact "Use critic with Clojure datatypes"
+      (let [model (Critic 1 2)]
+        ((critic-observation model) [0.0]) => float?))
+
+
 (facts "Test actor network"
        (without-gradient
          (let [zero-actor (Actor 2 5 1)]
