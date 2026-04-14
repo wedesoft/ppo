@@ -110,10 +110,11 @@
 
 (defn assoc-advantages
   "Associate advantages with batch of samples"
-  [batch]
-  (let [deltas     (deltas batch (constantly 0) 1.0)
-        advantages (advantages batch deltas 1.0 1.0)]
-    (assoc batch :advantages advantages)))
+  [gamma lambda]
+  (fn [batch]
+      (let [deltas     (deltas batch (constantly 0) gamma)
+            advantages (advantages batch deltas gamma lambda)]
+        (assoc batch :advantages advantages))))
 
 
 (defn critic-target
@@ -132,9 +133,9 @@
 
 (defn sample-with-advantage-and-critic-target
   "Create batches of samples and add add advantages and critic target values"
-  [environment-factory actor critic size batch-size]
+  [environment-factory actor critic size batch-size gamma lambda]
   (->> (sample-shuffle-and-batch environment-factory (indeterministic-act actor) size batch-size)
-       (map assoc-advantages)
+       (map (assoc-advantages gamma lambda))
        (map tensor-batch)
        (map (assoc-critic-target critic))))
 

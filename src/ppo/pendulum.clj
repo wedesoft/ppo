@@ -8,7 +8,7 @@
     (:import [java.util.concurrent CountDownLatch]))
 
 
-(def frame-rate 25)
+(def frame-rate 10)
 
 
 (def config
@@ -18,11 +18,11 @@
    :gravitation 20.0
    :dt (/ 1.0 frame-rate)
    :save false
-   :timeout 20.0
+   :timeout 12.0
    :target-angle 0.1
    :target-velocity 0.2
-   :angle-weight 1.0
-   :velocity-weight 1.0})
+   :angle-weight 0.01
+   :velocity-weight 0.01})
 
 
 (defn setup

@@ -121,7 +121,7 @@
 
 (facts "Associate advantages with batch of samples"
        (let [batch      {:observations [[4]] :next-observations [[2]] :rewards [2] :dones [false] :truncates [false]}
-             result     (assoc-advantages batch)]
+             result     ((assoc-advantages 1.0 1.0) batch)]
          (:observations result) => [[4]]
          (:advantages result) => [2.0]))
 
@@ -187,7 +187,7 @@
       (let [factory        (test-env-factory)
             actor          (Actor 1 5 1)
             critic         (Critic 1 5)
-            samples        (sample-with-advantage-and-critic-target factory actor critic 32 8)
+            samples        (sample-with-advantage-and-critic-target factory actor critic 32 8 0.9 1.0)
             batch          (first samples)
             optimizer      (adam-optimizer critic 0.01 0.0)
             _              (py. optimizer zero_grad)
@@ -202,7 +202,7 @@
       (let [factory        (test-env-factory)
             actor          (Actor 1 5 1)
             critic         (Critic 1 5)
-            samples        (sample-with-advantage-and-critic-target factory actor critic 32 8)
+            samples        (sample-with-advantage-and-critic-target factory actor critic 32 8 0.9 1.0)
             batch          (first samples)
             optimizer      (adam-optimizer actor 0.01 0.0)
             _              (py. optimizer zero_grad)
