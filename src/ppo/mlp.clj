@@ -129,16 +129,16 @@
       (tolist (without-gradient (critic (tensor observation))))))
 
 
-(defn tensor-indeterministic-act
+(defn indeterministic-act
   "Sample action using actor network returning distribution"
   [actor]
-  (fn tensor-indeterministic-act [observation]
+  (fn indeterministic-act-with-actor [observation]
       (without-gradient
-        (let [dist    (py. actor get_dist observation)
+        (let [dist    (py. actor get_dist (tensor observation))
               sample  (py. dist sample)
               action  (torch/clamp sample -1.0 1.0)
               logprob (py. dist log_prob action)]
-          {:action action :logprob logprob}))))
+          {:action (tolist action) :logprob (tolist logprob)}))))
 
 
 (defn logprob-of-action
@@ -147,12 +147,3 @@
   (fn [observation action]
       (let [dist (py. actor get_dist observation)]
         (py. dist log_prob action))))
-
-
-(defn indeterministic-act
-  "Perform conversions to torch tensors, call tensor-indeterministic-act, and convert result back"
-  [actor]
-  (let [tensor-indeterministic-act (tensor-indeterministic-act actor)]
-    (fn inteterministic-action [observation]
-        (let [{:keys [action logprob]} (tensor-indeterministic-act (tensor observation))]
-          {:action (tolist action) :logprob (tolist logprob)}))))
