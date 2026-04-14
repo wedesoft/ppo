@@ -126,11 +126,12 @@
   "Sample action using actor network returning distribution"
   [actor]
   (fn tensor-indeterministic-act [observation]
-      (let [dist    (py. actor get_dist observation)
-            sample  (py. dist sample)
-            action  (torch/clamp sample -1.0 1.0)
-            logprob (py. dist log_prob action)]
-        {:action action :logprob logprob})))
+      (without-gradient
+        (let [dist    (py. actor get_dist observation)
+              sample  (py. dist sample)
+              action  (torch/clamp sample -1.0 1.0)
+              logprob (py. dist log_prob action)]
+          {:action action :logprob logprob}))))
 
 
 (defn logprob-of-action

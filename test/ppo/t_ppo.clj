@@ -89,6 +89,12 @@
          (:observations (first batches)) => vector?))
 
 
+(facts "Sample, shuffle, and batch"
+       (let [batches (sample-shuffle-and-batch (test-env-factory) (constant-value 1) 4 2 [0 3 2 1])]
+         (:observations (first batches)) => [[101] [104]]
+         (:observations (second batches)) => [[103] [102]]))
+
+
 (defn linear-critic [observation] (first observation))
 
 (facts "Compute difference between actual reward plus discounted estimate of next state and estimated value of current state"
@@ -163,7 +169,7 @@
       (let [factory        (test-env-factory)
             actor          (Actor 1 5 1)
             critic         (Critic 1 5)
-            samples        (without-gradient (create-batches (shuffle-samples (sample-environment factory (indeterministic-act actor) 32)) 8))
+            samples        (sample-shuffle-and-batch factory (indeterministic-act actor) 32 8)
             batch          (first samples)
             deltas         (without-gradient (deltas batch (fn [observation] (tolist (critic (tensor observation)))) 0.8))
             advantages     (tensor (advantages batch deltas 0.8 0.0))
@@ -183,7 +189,7 @@
       (let [factory        (test-env-factory)
             actor          (Actor 1 5 1)
             critic         (Critic 1 5)
-            samples        (without-gradient (create-batches (shuffle-samples (sample-environment factory (indeterministic-act actor) 32)) 8))
+            samples        (sample-shuffle-and-batch factory (indeterministic-act actor) 32 8)
             batch          (first samples)
             deltas         (without-gradient (deltas batch (fn [observation] (tolist (critic (tensor observation)))) 0.8))
             advantages     (tensor (advantages batch deltas 0.8 0.0))

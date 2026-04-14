@@ -11,7 +11,7 @@
 
 (defn sample-environment
   "Collect trajectory data from environment"
-  [environment-factory policy n]
+  [environment-factory policy size]
   (loop [state             (environment-factory)
          observations      []
          actions           []
@@ -20,7 +20,7 @@
          rewards           []
          dones             []
          truncates         []
-         i                 n]
+         i                 size]
     (if (pos? i)
       (let [observation      (environment-observation state)
             sample           (policy observation)
@@ -49,10 +49,16 @@
        :truncates         truncates})))
 
 
+(defn random-order
+  "Create a list of randomly ordered indices"
+  [n]
+  (shuffle (range n)))
+
+
 (defn shuffle-samples
   "Random shuffle of samples"
   ([samples]
-   (shuffle-samples samples (shuffle (range (count samples)))))
+   (shuffle-samples samples (random-order (count samples))))
   ([samples indices]
    (zipmap (keys samples) (map #(mapv % indices) (vals samples)))))
 
@@ -61,6 +67,14 @@
   "Create mini batches from environment samples"
   [samples batch-size]
   (apply mapv (fn [& args] (zipmap (keys samples) (map vec args))) (map #(partition-all batch-size %) (vals samples))))
+
+
+(defn sample-shuffle-and-batch
+  "Sample environment, shuffle data, and create batches"
+  ([environment-factory policy size batch-size indices]
+   (create-batches (shuffle-samples (sample-environment environment-factory policy size) indices) batch-size))
+  ([environment-factory policy size batch-size]
+   (create-batches (shuffle-samples (sample-environment environment-factory policy size) (random-order size)) batch-size)))
 
 
 (defn deltas
