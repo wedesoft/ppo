@@ -2,6 +2,7 @@
     (:require
       [libpython-clj2.require :refer (require-python)]
       [libpython-clj2.python :refer (py.) :as py]
+      [ppo.mlp :refer (tensor logprob-of-action)]
       [ppo.environment :refer (environment-observation environment-update environment-reward environment-done?
                                environment-truncate?)]))
 
@@ -77,6 +78,15 @@
    (create-batches (shuffle-samples (sample-environment environment-factory policy size) (random-order size)) batch-size)))
 
 
+(defn tensor-batch
+  "Convert batch to Torch tensors"
+  [batch]
+  {:observations (tensor (:observations batch))
+   :logprobs (tensor (:logprobs batch))
+   :actions (tensor (:actions batch))
+   :advantages (tensor (:advantages batch))})
+
+
 (defn deltas
   "Compute difference between actual reward plus discounted estimate of next state and estimated value of current state"
   [{:keys [observations next-observations rewards dones]} critic gamma]
@@ -96,6 +106,14 @@
             (+ delta (if (or done truncate) 0.0 (* gamma lambda advantage))))
         0.0
         (reverse (map vector deltas dones truncates)))))))
+
+
+(defn assoc-advantages
+  "Associate advantages with batch of samples"
+  [batch]
+  (let [deltas     (deltas batch (constantly 0) 1.0)
+        advantages (advantages batch deltas 1.0 1.0)]
+    (assoc batch :advantages advantages)))
 
 
 (defn critic-target
@@ -119,3 +137,11 @@
       (torch/min
         (torch/mul probability-ratios advantages)
         (torch/mul (torch/clamp probability-ratios (- 1.0 epsilon) (+ 1.0 epsilon)) advantages)))))
+
+
+(defn actor-loss
+  "Compute loss value for batch of samples and actor"
+  [samples actor epsilon]
+  (let [ratios (probability-ratios samples (logprob-of-action actor))
+        loss   (clipped-surrogate-loss ratios (:advantages samples) epsilon)]
+    loss))

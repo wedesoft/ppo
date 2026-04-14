@@ -3,8 +3,7 @@
       [midje.sweet :refer :all]
       [libpython-clj2.python :refer (py.) :as py]
       [ppo.environment :refer (Environment)]
-      [ppo.mlp :refer (tensor tolist Actor Critic indeterministic-act logprob-of-action adam-optimizer mse-loss without-gradient
-                       critic-observation)]
+      [ppo.mlp :refer (tensor tolist Actor Critic indeterministic-act adam-optimizer mse-loss without-gradient)]
       [ppo.ppo :refer :all]))
 
 
@@ -120,6 +119,13 @@
        (advantages {:dones [false] :truncates [false]} [0.0] 1.0 1.0) => vector?)
 
 
+(facts "Associate advantages with batch of samples"
+       (let [batch      {:observations [[4]] :next-observations [[2]] :rewards [2] :dones [false] :truncates [false]}
+             result     (assoc-advantages batch)]
+         (:observations result) => [[4]]
+         (:advantages result) => [2.0]))
+
+
 (facts "Target values for critic"
        (tolist (critic-target {:observations (tensor [[4]])} (tensor [0]) (constantly (tensor [0])))) => [0.0]
        (tolist (critic-target {:observations (tensor [[4]])} (tensor [2]) (constantly (tensor [0])))) => [2.0]
@@ -166,23 +172,31 @@
        (tolist (clipped-surrogate-loss (tensor [[2.0]]) (tensor [[-3.0]]) 0.25)) => 6.0)
 
 
+(facts "Convert batch to Torch tensors"
+       (let [result (tensor-batch {:observations [[4.0]]
+                                   :logprobs [[-1.0]]
+                                   :actions [[0.0 1.0]]
+                                   :advantages [0.5]})]
+         (tolist (:observations result)) => [[4.0]]
+         (tolist (:logprobs result)) => [[-1.0]]
+         (tolist (:actions result)) => [[0.0 1.0]]
+         (tolist (:advantages result)) => [0.5]))
+
+
 (fact "Integration test critic training step"
       (let [factory        (test-env-factory)
             actor          (Actor 1 5 1)
             critic         (Critic 1 5)
-            samples        (sample-shuffle-and-batch factory (indeterministic-act actor) 32 8)
-            batch          (first samples)
-            deltas         (deltas batch (critic-observation critic) 0.8)
-            advantages     (tensor (advantages batch deltas 0.8 0.5))
-            tensor-batch   {:observations (tensor (:observations batch))}
-            target         (without-gradient (critic-target tensor-batch advantages critic))
-            optimizer      (adam-optimizer critic 0.1 0.0)
+            samples        (map assoc-advantages (sample-shuffle-and-batch factory (indeterministic-act actor) 32 8))
+            batch          (tensor-batch (first samples))
+            target         (without-gradient (critic-target batch (:advantages batch) critic))
+            optimizer      (adam-optimizer critic 0.01 0.0)
             criterion      (mse-loss)
             _              (py. optimizer zero_grad)
-            loss           (criterion (critic (:observations tensor-batch)) target)
+            loss           (criterion (critic (:observations batch)) target)
             _              (py. loss backward)
             _              (py. optimizer step)
-            updated-loss   (criterion (critic (:observations tensor-batch)) target)]
+            updated-loss   (criterion (critic (:observations batch)) target)]
         (tolist updated-loss) => #(< % (tolist loss))))
 
 
@@ -190,18 +204,12 @@
       (let [factory        (test-env-factory)
             actor          (Actor 1 5 1)
             critic         (Critic 1 5)
-            samples        (sample-shuffle-and-batch factory (indeterministic-act actor) 32 8)
-            batch          (first samples)
-            deltas         (deltas batch (critic-observation critic) 0.8)
-            advantages     (tensor (advantages batch deltas 0.8 0.5))
-            tensor-batch   {:observations (tensor (:observations batch))
-                            :logprobs (tensor (:logprobs batch))
-                            :actions (tensor (:actions batch))}
-            optimizer      (adam-optimizer actor 0.1 0.0)
+            samples        (map assoc-advantages (sample-shuffle-and-batch factory (indeterministic-act actor) 32 8))
+            batch          (tensor-batch (first samples))
+            optimizer      (adam-optimizer actor 0.01 0.0)
             _              (py. optimizer zero_grad)
-            ratios         (probability-ratios tensor-batch (logprob-of-action actor) )
-            loss           (clipped-surrogate-loss ratios advantages 0.2)
+            loss           (actor-loss batch actor 0.2)
             _              (py. loss backward)
             _              (py. optimizer step)
-            updated-loss   (clipped-surrogate-loss (probability-ratios tensor-batch (logprob-of-action actor)) advantages 0.2)]
+            updated-loss   (actor-loss batch actor 0.2)]
         (tolist updated-loss) => #(< % (tolist loss))))
