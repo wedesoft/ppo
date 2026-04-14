@@ -3,7 +3,7 @@
       [midje.sweet :refer :all]
       [libpython-clj2.python :refer (py.) :as py]
       [ppo.environment :refer (Environment)]
-      [ppo.mlp :refer (tensor tolist Actor Critic indeterministic-act adam-optimizer mse-loss without-gradient)]
+      [ppo.mlp :refer (tensor tolist Actor Critic indeterministic-act adam-optimizer mse-loss)]
       [ppo.ppo :refer :all]))
 
 
@@ -127,11 +127,11 @@
 
 
 (facts "Target values for critic"
-       (tolist (critic-target {:observations (tensor [[4]])} (tensor [0]) (constantly (tensor [0])))) => [0.0]
-       (tolist (critic-target {:observations (tensor [[4]])} (tensor [2]) (constantly (tensor [0])))) => [2.0]
-       (tolist (critic-target {:observations (tensor [[4]])} (tensor [0]) #(torch/squeeze % -1))) => [4.0]
-       (tolist (critic-target {:observations (tensor [[4]])} (tensor [3]) #(torch/squeeze % -1))) => [7.0]
-       (tolist (critic-target {:observations (tensor [[4] [3]])} (tensor [2 1]) #(torch/squeeze % -1))) => [6.0 4.0])
+       (tolist (critic-target {:observations (tensor [[4]]) :advantages (tensor [0])} (constantly (tensor [0])))) => [0.0]
+       (tolist (critic-target {:observations (tensor [[4]]) :advantages (tensor [2])} (constantly (tensor [0])))) => [2.0]
+       (tolist (critic-target {:observations (tensor [[4]]) :advantages (tensor [0])} #(torch/squeeze % -1))) => [4.0]
+       (tolist (critic-target {:observations (tensor [[4]]) :advantages (tensor [3])} #(torch/squeeze % -1))) => [7.0]
+       (tolist (critic-target {:observations (tensor [[4] [3]]) :advantages (tensor [2 1])} #(torch/squeeze % -1))) => [6.0 4.0])
 
 
 (defn action-prob [p] (fn [observations actions] (tensor [[p]])))
@@ -189,7 +189,7 @@
             critic         (Critic 1 5)
             samples        (map assoc-advantages (sample-shuffle-and-batch factory (indeterministic-act actor) 32 8))
             batch          (tensor-batch (first samples))
-            target         (without-gradient (critic-target batch (:advantages batch) critic))
+            target         (critic-target batch critic)
             optimizer      (adam-optimizer critic 0.01 0.0)
             criterion      (mse-loss)
             _              (py. optimizer zero_grad)

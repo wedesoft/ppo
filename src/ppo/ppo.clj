@@ -2,7 +2,7 @@
     (:require
       [libpython-clj2.require :refer (require-python)]
       [libpython-clj2.python :refer (py.) :as py]
-      [ppo.mlp :refer (tensor logprob-of-action)]
+      [ppo.mlp :refer (tensor logprob-of-action without-gradient)]
       [ppo.environment :refer (environment-observation environment-update environment-reward environment-done?
                                environment-truncate?)]))
 
@@ -118,8 +118,15 @@
 
 (defn critic-target
   "Determine target values for critic"
-  [{:keys [observations]} advantages critic]
-  (torch/add (critic observations) advantages))
+  [{:keys [observations advantages]} critic]
+  (without-gradient (torch/add (critic observations) advantages)))
+
+
+(defn assoc-critic-target
+  "Associate critic target values with batch of samples"
+  [batch critic]
+  (let [target (critic-target batch critic)]
+    (assoc batch :critic-target target)))
 
 
 (defn probability-ratios
