@@ -3,7 +3,7 @@
       [midje.sweet :refer :all]
       [libpython-clj2.python :refer (py.) :as py]
       [ppo.environment :refer (Environment)]
-      [ppo.mlp :refer (tensor tolist Actor Critic indeterministic-act adam-optimizer mse-loss)]
+      [ppo.mlp :refer (tensor tolist Actor Critic indeterministic-act adam-optimizer)]
       [ppo.ppo :refer :all]))
 
 
@@ -187,16 +187,17 @@
       (let [factory        (test-env-factory)
             actor          (Actor 1 5 1)
             critic         (Critic 1 5)
-            samples        (map assoc-advantages (sample-shuffle-and-batch factory (indeterministic-act actor) 32 8))
-            batch          (tensor-batch (first samples))
-            target         (critic-target batch critic)
+            samples        (->> (sample-shuffle-and-batch factory (indeterministic-act actor) 32 8)
+                                (map assoc-advantages)
+                                (map tensor-batch)
+                                (map (assoc-critic-target critic)))
+            batch          (first samples)
             optimizer      (adam-optimizer critic 0.01 0.0)
-            criterion      (mse-loss)
             _              (py. optimizer zero_grad)
-            loss           (criterion (critic (:observations batch)) target)
+            loss           (critic-loss batch critic)
             _              (py. loss backward)
             _              (py. optimizer step)
-            updated-loss   (criterion (critic (:observations batch)) target)]
+            updated-loss   (critic-loss batch critic)]
         (tolist updated-loss) => #(< % (tolist loss))))
 
 
@@ -204,8 +205,11 @@
       (let [factory        (test-env-factory)
             actor          (Actor 1 5 1)
             critic         (Critic 1 5)
-            samples        (map assoc-advantages (sample-shuffle-and-batch factory (indeterministic-act actor) 32 8))
-            batch          (tensor-batch (first samples))
+            samples        (->> (sample-shuffle-and-batch factory (indeterministic-act actor) 32 8)
+                                (map assoc-advantages)
+                                (map tensor-batch)
+                                (map (assoc-critic-target critic)))
+            batch          (first samples)
             optimizer      (adam-optimizer actor 0.01 0.0)
             _              (py. optimizer zero_grad)
             loss           (actor-loss batch actor 0.2)

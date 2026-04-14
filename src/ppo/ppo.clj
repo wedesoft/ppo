@@ -2,7 +2,7 @@
     (:require
       [libpython-clj2.require :refer (require-python)]
       [libpython-clj2.python :refer (py.) :as py]
-      [ppo.mlp :refer (tensor logprob-of-action without-gradient)]
+      [ppo.mlp :refer (tensor logprob-of-action without-gradient mse-loss)]
       [ppo.environment :refer (environment-observation environment-update environment-reward environment-done?
                                environment-truncate?)]))
 
@@ -124,9 +124,10 @@
 
 (defn assoc-critic-target
   "Associate critic target values with batch of samples"
-  [batch critic]
-  (let [target (critic-target batch critic)]
-    (assoc batch :critic-target target)))
+  [critic]
+  (fn [batch]
+      (let [target (critic-target batch critic)]
+        (assoc batch :critic-target target))))
 
 
 (defn probability-ratios
@@ -151,4 +152,12 @@
   [samples actor epsilon]
   (let [ratios (probability-ratios samples (logprob-of-action actor))
         loss   (clipped-surrogate-loss ratios (:advantages samples) epsilon)]
+    loss))
+
+
+(defn critic-loss
+  "Compute loss value for batch of samples and critic"
+  [samples critic]
+  (let [criterion (mse-loss)
+        loss      (criterion (critic (:observations samples)) (:critic-target samples))]
     loss))
