@@ -2,7 +2,7 @@
     (:require
       [libpython-clj2.require :refer (require-python)]
       [libpython-clj2.python :refer (py.) :as py]
-      [ppo.mlp :refer (tensor logprob-of-action without-gradient mse-loss)]
+      [ppo.mlp :refer (tensor logprob-of-action without-gradient mse-loss indeterministic-act)]
       [ppo.environment :refer (environment-observation environment-update environment-reward environment-done?
                                environment-truncate?)]))
 
@@ -128,6 +128,15 @@
   (fn [batch]
       (let [target (critic-target batch critic)]
         (assoc batch :critic-target target))))
+
+
+(defn sample-with-advantage-and-critic-target
+  "Create batches of samples and add add advantages and critic target values"
+  [environment-factory actor critic size batch-size]
+  (->> (sample-shuffle-and-batch environment-factory (indeterministic-act actor) size batch-size)
+       (map assoc-advantages)
+       (map tensor-batch)
+       (map (assoc-critic-target critic))))
 
 
 (defn probability-ratios
