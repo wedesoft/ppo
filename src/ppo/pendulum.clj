@@ -19,6 +19,7 @@
 (def config
   {:length  0.8
    :friction 0.1
+   :max-speed 10.0
    :motor 5.0
    :gravitation 20.0
    :dt (/ 1.0 frame-rate)
