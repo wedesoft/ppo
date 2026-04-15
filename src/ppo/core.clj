@@ -12,20 +12,20 @@
 
 (defn pendulum-factory
   []
-  (->Pendulum config (setup (rand (* 2 PI)) (- (rand 8.0) 4.0))))
+  (->Pendulum config (setup 0.0 (- (rand 20.0) 10.0))))
 
 
 (defn -main [& _args]
   (let [factory          pendulum-factory
-        actor            (Actor 3 64 1)
-        critic           (Critic 3 64)
-        n-epochs         100
-        n-updates        5
-        gamma            0.99
-        lambda           0.95
+        actor            (Actor 3 150 1)
+        critic           (Critic 3 150)
+        n-epochs         500
+        n-updates        10
+        gamma            0.98
+        lambda           1.0
         epsilon          0.2
         batch-size       64
-        n-batches        8
+        n-batches        4
         checkpoint       10
         actor-optimizer  (adam-optimizer actor 0.0002 0.001)
         critic-optimizer (adam-optimizer critic 0.0002 0.001)]
@@ -40,14 +40,14 @@
                                                                           batch-size gamma lambda)]
              (doseq [k (range n-updates)]
                     (doseq [batch samples]
-                           (py. actor-optimizer zero_grad)
                            (let [loss (actor-loss batch actor epsilon)]
+                             (py. actor-optimizer zero_grad)
                              (py. loss backward)
                              (py. actor-optimizer step)
                              (swap! smooth-actor-loss (fn [x] (+ (* 0.95 x) (* 0.01 (tolist loss))))) ))
                     (doseq [batch samples]
-                           (py. critic-optimizer zero_grad)
                            (let [loss (critic-loss batch critic)]
+                             (py. critic-optimizer zero_grad)
                              (py. loss backward)
                              (py. critic-optimizer step)
                              (swap! smooth-critic-loss (fn [x] (+ (* 0.97 x) (* 0.01 (tolist loss))))))))
@@ -56,7 +56,7 @@
                       "Critic Loss:" @smooth-critic-loss))
            (when (= (mod epoch checkpoint) (dec checkpoint))
              (println "Saving models")
-             (doseq [input [[1 0 -2.0] [1 0 2.0] [0 -1 -2.0] [0 -1 2.0] [0 1 -2.0] [0 1 2.0]]]
+             (doseq [input [[1 0 -1.0] [1 0 1.0] [0 -1 -1.0] [0 -1 1.0] [0 1 -1.0] [0 1 1.0]]]
                     (println input "->" (action (tolist (py. actor deterministic_act (tensor input))))))
              (torch/save (py. actor state_dict) "actor.pt")
              (torch/save (py. critic state_dict) "critic.pt")))

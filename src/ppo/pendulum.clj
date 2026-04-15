@@ -167,23 +167,23 @@
       (q/save-frame "frame-####.png"))))
 
 
-(defn mouse-action
-  "Control motor with mouse"
-  []
-  {:control (if (q/mouse-pressed?) (- (/ (q/mouse-x) (/ (q/width) 2.0)) 1.0) 0.0)})
-
-
 (defn -main [& _args]
-  (let [actor     (Actor 3 64 1)
+  (let [actor     (Actor 3 150 1)
         done-chan (async/chan)]
     (when (.exists (java.io.File. "actor.pt"))
       (py. actor load_state_dict (torch/load "actor.pt")))
     (q/sketch
       :title "Inverted Pendulum with Mouse Control"
       :size [854 480]
-      :setup #(setup 0.1 0.0)
-      ; :update #(update-state % (mouse-action))
-      :update (fn [state] (update-state state (action (tolist (py. actor deterministic_act (tensor (observation state)))))))
+      :setup #(setup 0.0 (- (rand 0.0) 10.0))
+      :update (fn [state]
+                  (let [observation (observation state)
+                        action      (if (q/mouse-pressed?)
+                                      {:control (- (/ (q/mouse-x) (/ (q/width) 2.0)) 1.0)}
+                                      (action (tolist (py. actor deterministic_act (tensor observation)))))
+                        action {:control 0.0}
+                        reward      (reward state config action)]
+                    (update-state state action)))
       :draw draw-state
       :middleware [m/fun-mode]
       :on-close (fn [& _] (async/close! done-chan)))

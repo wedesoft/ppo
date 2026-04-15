@@ -131,13 +131,21 @@
         (assoc batch :critic-target target))))
 
 
+(defn normalize-advantages
+  "Normalize advantages"
+  [batch]
+  (let [advantages (:advantages batch)]
+    (assoc batch :advantages (torch/div (torch/sub advantages (torch/mean advantages)) (torch/std advantages)))))
+
+
 (defn sample-with-advantage-and-critic-target
   "Create batches of samples and add add advantages and critic target values"
   [environment-factory actor critic size batch-size gamma lambda]
   (->> (sample-shuffle-and-batch environment-factory (indeterministic-act actor) size batch-size)
        (map (assoc-advantages gamma lambda))
        (map tensor-batch)
-       (map (assoc-critic-target critic))))
+       (map (assoc-critic-target critic))
+       (map normalize-advantages)))
 
 
 (defn probability-ratios
