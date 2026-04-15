@@ -13,7 +13,7 @@
 (require-python '[torch :as torch])
 
 
-(def frame-rate 10)
+(def frame-rate 20)
 
 
 (def config
