@@ -4,8 +4,13 @@
               [clojure.core.async :as async]
               [quil.core :as q]
               [quil.middleware :as m]
+              [libpython-clj2.require :refer (require-python)]
+              [libpython-clj2.python :refer (py.) :as py]
+              [ppo.mlp :refer (Actor tensor tolist)]
               [ppo.environment :refer (Environment)])
     (:import [java.util.concurrent CountDownLatch]))
+
+(require-python '[torch :as torch])
 
 
 (def frame-rate 10)
@@ -87,7 +92,7 @@
 (defn action
   "Convert array to action"
   [array]
-  {:control (max -1.0 (min 1.0 (first array)))})
+  {:control (max -1.0 (min 1.0 (- (* 2.0 (first array)) 1.0)))})
 
 
 (defn truncate?
@@ -169,12 +174,16 @@
 
 
 (defn -main [& _args]
-  (let [done-chan (async/chan)]
+  (let [actor     (Actor 3 64 1)
+        done-chan (async/chan)]
+    (when (.exists (java.io.File. "actor.pt"))
+      (py. actor load_state_dict (torch/load "actor.pt")))
     (q/sketch
       :title "Inverted Pendulum with Mouse Control"
       :size [854 480]
       :setup #(setup 0.1 0.0)
-      :update #(update-state % (mouse-action))
+      ; :update #(update-state % (mouse-action))
+      :update (fn [state] (update-state state (action (tolist (py. actor deterministic_act (tensor (observation state)))))))
       :draw draw-state
       :middleware [m/fun-mode]
       :on-close (fn [& _] (async/close! done-chan)))

@@ -7,7 +7,7 @@
                 '[torch.nn :as nn]
                 '[torch.nn.functional :as F]
                 '[torch.optim :as optim]
-                '[torch.distributions :refer (Normal)])
+                '[torch.distributions :refer (Beta)])
 
 
 (defmacro without-gradient
@@ -72,10 +72,10 @@
            (py. nn/Module __init__ self)
            (py/set-attrs!
              self
-             {"fc1" (nn/Linear observation-size hidden-units)
-              "fc2" (nn/Linear hidden-units hidden-units)
-              "fcmu" (nn/Linear hidden-units action-size)
-              "fcsigma" (nn/Linear hidden-units action-size)})
+             {"fc1"     (nn/Linear observation-size hidden-units)
+              "fc2"     (nn/Linear hidden-units hidden-units)
+              "fcalpha" (nn/Linear hidden-units action-size)
+              "fcbeta"  (nn/Linear hidden-units action-size)})
            nil))
      "forward"
      (py/make-instance-fn
@@ -84,19 +84,19 @@
                  x (torch/tanh x)
                  x (py. self fc2 x)
                  x (torch/tanh x)
-                 mu (torch/tanh (py. self fcmu x))
-                 sigma (F/softplus (py. self fcsigma x))]
-             [mu sigma])))
+                 alpha (torch/add 1.0 (F/softplus (py. self fcalpha x)))
+                 beta  (torch/add 1.0 (F/softplus (py. self fcbeta x)))]
+             [alpha beta])))
      "deterministic_act"
      (py/make-instance-fn
        (fn [self x]
-            (let [[mu _sigma] (py. self forward x)]
-              mu)))
+            (let [[alpha beta] (py. self forward x)]
+              (torch/div alpha (torch/add alpha beta)))))
      "get_dist"
      (py/make-instance-fn
        (fn [self x]
-           (let [[mu sigma] (py. self forward x)]
-             (Normal mu sigma))))}))
+           (let [[alpha beta] (py. self forward x)]
+             (Beta alpha beta))))}))
 
 
 (defn mse-loss
@@ -136,7 +136,7 @@
       (without-gradient
         (let [dist    (py. actor get_dist (tensor observation))
               sample  (py. dist sample)
-              action  (torch/clamp sample -1.0 1.0)
+              action  (torch/clamp sample 0.0 1.0)
               logprob (py. dist log_prob action)]
           {:action (tolist action) :logprob (tolist logprob)}))))
 

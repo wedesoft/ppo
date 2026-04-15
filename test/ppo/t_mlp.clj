@@ -50,11 +50,9 @@
                   (py. param zero_))
            (py. zero-actor eval)
            (let [result (zero-actor (tensor [[0 0] [0 0] [0 0]]))]
-             (tolist (first result)) => [[0.0] [0.0] [0.0]]
-             (tolist (second result)) => [[0.6931471824645996] [0.6931471824645996] [0.6931471824645996]])
-           (tolist (py. zero-actor deterministic_act (tensor [[0 0]]))) => [[0.0]]
-           (tolist (py/py.- (py. zero-actor get_dist (tensor [[0 0]])) mean)) => [[0.0]]
-           (tolist (py/py.- (py. zero-actor get_dist (tensor [[0 0]])) stddev)) => [[0.6931471824645996]]
+             (tolist (first result)) => [[1.6931471824645996] [1.6931471824645996] [1.6931471824645996]]
+             (tolist (second result)) => [[1.6931471824645996] [1.6931471824645996] [1.6931471824645996]] )
+           (tolist (py. zero-actor deterministic_act (tensor [[0 0]]))) => [[0.5]]
            (let [result ((indeterministic-act zero-actor) [[0 0]])]
              (:action result) => some?
              (:logprob result) => some?
