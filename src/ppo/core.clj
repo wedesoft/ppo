@@ -26,7 +26,7 @@
         epsilon          0.2
         batch-size       64
         n-batches        4
-        checkpoint       10
+        checkpoint       100
         actor-optimizer  (adam-optimizer actor 0.0002 0.001)
         critic-optimizer (adam-optimizer critic 0.0002 0.001)]
     (when (.exists (java.io.File. "actor.pt"))

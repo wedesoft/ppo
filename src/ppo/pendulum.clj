@@ -70,13 +70,13 @@
   "Perform simulation step of pendulum"
   ([state action]
    (update-state state action config))
-  ([{:keys [angle velocity t]} {:keys [control]} {:keys [dt friction motor gravitation length]}]
+  ([{:keys [angle velocity t]} {:keys [control]} {:keys [dt friction motor gravitation length max-speed]}]
    (let [friction     (friction-acceleration friction velocity dt)
          gravity      (pendulum-gravity gravitation length angle)
          motor        (motor-acceleration control motor)
          t            (+ t dt)
          acceleration (+ motor gravity friction)
-         velocity     (+ velocity (* acceleration dt))
+         velocity     (max (- max-speed) (min max-speed (+ velocity (* acceleration dt))))
          angle        (+ angle (* velocity dt))]
      {:angle    angle
       :velocity velocity
@@ -175,13 +175,12 @@
     (q/sketch
       :title "Inverted Pendulum with Mouse Control"
       :size [854 480]
-      :setup #(setup 0.0 (- (rand 0.0) 10.0))
+      :setup #(setup 0.0 (- (rand 2.0) 1.0))
       :update (fn [state]
                   (let [observation (observation state)
                         action      (if (q/mouse-pressed?)
                                       {:control (- (/ (q/mouse-x) (/ (q/width) 2.0)) 1.0)}
                                       (action (tolist (py. actor deterministic_act (tensor observation)))))
-                        action {:control 0.0}
                         reward      (reward state config action)]
                     (update-state state action)))
       :draw draw-state
