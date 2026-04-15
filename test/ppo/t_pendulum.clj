@@ -80,19 +80,7 @@
 
 
 (facts "Check whether a run should be aborted"
-       (truncate? {:t 50.0} {:timeout 100.0}) => false
-       (truncate? {:t 100.0} {:timeout 100.0}) => true
-       (truncate? {:t 101.0} {:timeout 100.0}) => true)
-
-
-(facts "Check whether pendulum achieved target state"
-       (done? {:angle 0.0 :velocity 0.0} {:target-angle 0.1 :target-velocity 0.2}) => false
-       (done? {:angle (- PI 0.05) :velocity 0.0} {:target-angle 0.1 :target-velocity 0.2}) => true
-       (done? {:angle (+ PI 0.05) :velocity 0.0} {:target-angle 0.1 :target-velocity 0.2}) => true
-       (done? {:angle (- (- PI) 0.05) :velocity 0.0} {:target-angle 0.1 :target-velocity 0.2}) => true
-       (done? {:angle (+ (- PI) 0.05) :velocity 0.0} {:target-angle 0.1 :target-velocity 0.2}) => true
-       (done? {:angle PI :velocity 0.4} {:target-angle 0.1 :target-velocity 0.2}) => false
-       (done? {:angle PI :velocity -0.4} {:target-angle 0.1 :target-velocity 0.2}) => false)
+       (truncate? {:t 50.0} {:timeout 100.0}) => false)
 
 
 (def test-config
@@ -108,6 +96,17 @@
    :angle-weight 3.0
    :velocity-weight 5.0
    :control-weight 1.0})
+
+
+(facts "Check whether pendulum achieved target state"
+       (done? {:angle 0.0 :velocity 0.0 :t 0.0} test-config) => false
+       (done? {:angle (- PI 0.05) :velocity 0.0 :t 0.0} test-config) => true
+       (done? {:angle (+ PI 0.05) :velocity 0.0 :t 0.0} test-config) => true
+       (done? {:angle (- (- PI) 0.05) :velocity 0.0 :t 0.0} test-config) => true
+       (done? {:angle (+ (- PI) 0.05) :velocity 0.0 :t 0.0} test-config) => true
+       (done? {:angle PI :velocity 0.4 :t 0.0} test-config) => false
+       (done? {:angle PI :velocity -0.4 :t 0.0} test-config) => false
+       (done? {:angle 0.0 :velocity 0.0 :t 20.0} test-config) => true)
 
 
 (facts "Reward function"

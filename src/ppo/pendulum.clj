@@ -22,7 +22,8 @@
    :target-angle 0.1
    :target-velocity 0.2
    :angle-weight 1.0
-   :velocity-weight 0.1})
+   :velocity-weight 0.1
+   :control-weight 0.01})
 
 
 (defn setup
@@ -94,7 +95,7 @@
   ([state]
    (truncate? state config))
   ([{:keys [t]} {:keys [timeout]}]
-   (>= t timeout)))
+   false))
 
 
 (defn up-deviation
@@ -107,9 +108,10 @@
   "Decide whether pendulum achieved target state"
   ([state]
    (done? state config))
-  ([{:keys [angle velocity]} {:keys [target-angle target-velocity]}]
-   (and (<= (abs (up-deviation angle)) target-angle)
-        (<= (abs velocity) target-velocity))))
+  ([{:keys [angle velocity t]} {:keys [target-angle target-velocity timeout]}]
+   (or (>= t timeout)
+       (and (<= (abs (up-deviation angle)) target-angle)
+            (<= (abs velocity) target-velocity)))))
 
 
 (defn sqr
@@ -123,7 +125,7 @@
   [{:keys [angle velocity]} {:keys [angle-weight velocity-weight control-weight]} {:keys [control]}]
   (- (+ (* angle-weight (sqr (up-deviation angle)))
         (* velocity-weight (sqr velocity))
-        (* control-weight control control))))
+        (* control-weight (sqr control)))))
 
 
 (defrecord Pendulum [config state]

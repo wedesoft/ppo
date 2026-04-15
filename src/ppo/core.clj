@@ -20,8 +20,9 @@
         actor            (Actor 3 10 1)
         critic           (Critic 3 10)
         n                5
-        c-actor          40
-        c-critic         200
+        gamma            0.8
+        lambda           1.0
+        epsilon          0.2
         actor-optimizer  (adam-optimizer actor 0.01 0.001)
         critic-optimizer (adam-optimizer critic 0.01 0.001)]
     (when (.exists (java.io.File. "actor.pt"))
@@ -31,21 +32,19 @@
     (doseq [k (range n)]
            (let [smooth-actor-loss  (atom 0.0)
                  smooth-critic-loss (atom 0.0)
-                 samples         (sample-with-advantage-and-critic-target factory actor critic (* 64 32) 64 0.99 1.0)]
-             (doseq [epoch (range c-actor)]
-                    (doseq [batch samples]
-                           (py. actor-optimizer zero_grad)
-                           (let [loss (actor-loss batch actor 0.2)]
-                             (py. loss backward)
-                             (py. actor-optimizer step)
-                             (swap! smooth-actor-loss (fn [x] (+ (* 0.95 x) (* 0.01 (tolist loss))))) )))
-             (doseq [epoch (range c-critic)]
-                    (doseq [batch samples]
-                           (py. critic-optimizer zero_grad)
-                           (let [loss (critic-loss batch critic)]
-                             (py. loss backward)
-                             (py. critic-optimizer step)
-                             (swap! smooth-critic-loss (fn [x] (+ (* 0.97 x) (* 0.01 (tolist loss))))))))
+                 samples         (sample-with-advantage-and-critic-target factory actor critic (* 64 32) 64 gamma lambda)]
+             (doseq [batch samples]
+                    (py. actor-optimizer zero_grad)
+                    (let [loss (actor-loss batch actor epsilon)]
+                      (py. loss backward)
+                      (py. actor-optimizer step)
+                      (swap! smooth-actor-loss (fn [x] (+ (* 0.95 x) (* 0.01 (tolist loss))))) ))
+             (doseq [batch samples]
+                    (py. critic-optimizer zero_grad)
+                    (let [loss (critic-loss batch critic)]
+                      (py. loss backward)
+                      (py. critic-optimizer step)
+                      (swap! smooth-critic-loss (fn [x] (+ (* 0.97 x) (* 0.01 (tolist loss)))))))
              (println "Epoch:" k
                       "Actor Loss:" @smooth-actor-loss
                       "Critic Loss:" @smooth-critic-loss))
