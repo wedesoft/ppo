@@ -21,15 +21,15 @@
    :timeout 12.0
    :target-angle 0.1
    :target-velocity 0.2
-   :angle-weight 0.01
-   :velocity-weight 0.01})
+   :angle-weight 1.0
+   :velocity-weight 0.1})
 
 
 (defn setup
   "Initialise pendulum"
-  [angle]
+  [angle velocity]
   {:angle    angle
-   :velocity 0.0
+   :velocity velocity
    :t        0.0})
 
 
@@ -120,9 +120,10 @@
 
 (defn reward
   "Reward function"
-  [{:keys [angle velocity]} {:keys [angle-weight velocity-weight]}]
+  [{:keys [angle velocity]} {:keys [angle-weight velocity-weight control-weight]} {:keys [control]}]
   (- (+ (* angle-weight (sqr (up-deviation angle)))
-        (* velocity-weight (sqr velocity)))))
+        (* velocity-weight (sqr velocity))
+        (* control-weight control control))))
 
 
 (defrecord Pendulum [config state]
@@ -135,8 +136,8 @@
     (done? state config))
   (environment-truncate? [_this]
     (truncate? state config))
-  (environment-reward [_this _action]
-    (reward state config)))
+  (environment-reward [_this input]
+    (reward state config (action input))))
 
 
 (defn draw-state [{:keys [angle]}]
@@ -170,7 +171,7 @@
     (q/sketch
       :title "Inverted Pendulum with Mouse Control"
       :size [854 480]
-      :setup #(setup 0.1)
+      :setup #(setup 0.1 0.0)
       :update #(update-state % (mouse-action))
       :draw draw-state
       :middleware [m/fun-mode]

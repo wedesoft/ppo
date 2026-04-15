@@ -7,7 +7,7 @@
 
 
 (fact "Set up pendulum"
-      (setup (/ PI 2)) => {:angle (/ PI 2) :velocity 0.0 :t 0.0})
+      (setup (/ PI 2) 0.5) => {:angle (/ PI 2) :velocity 0.5 :t 0.0})
 
 
 (facts "Angular acceleration due to gravitation"
@@ -95,14 +95,6 @@
        (done? {:angle PI :velocity -0.4} {:target-angle 0.1 :target-velocity 0.2}) => false)
 
 
-(facts "Reward function"
-       (reward {:angle PI :velocity 0.0} {:angle-weight 3.0 :velocity-weight 5.0}) => 0.0
-       (reward {:angle (+ PI 2.0) :velocity 0.0} {:angle-weight 3.0 :velocity-weight 5.0}) => -12.0
-       (reward {:angle (- PI 2.0) :velocity 0.0} {:angle-weight 3.0 :velocity-weight 5.0}) => -12.0
-       (reward {:angle PI :velocity 2.0} {:angle-weight 3.0 :velocity-weight 5.0}) => -20.0
-       (reward {:angle PI :velocity -2.0} {:angle-weight 3.0 :velocity-weight 5.0}) => -20.0)
-
-
 (def test-config
   {:length  1.0
    :friction 0.1
@@ -114,13 +106,25 @@
    :target-angle 0.1
    :target-velocity 0.2
    :angle-weight 3.0
-   :velocity-weight 5.0})
+   :velocity-weight 5.0
+   :control-weight 1.0})
+
+
+(facts "Reward function"
+       (reward {:angle PI :velocity 0.0} test-config {:control 0.0}) => 0.0
+       (reward {:angle PI :velocity 0.0} test-config {:control 1.0}) => -1.0
+       (reward {:angle PI :velocity 0.0} test-config {:control -1.0}) => -1.0
+       (reward {:angle (+ PI 2.0) :velocity 0.0} test-config {:control 0.0}) => -12.0
+       (reward {:angle (- PI 2.0) :velocity 0.0} test-config {:control 0.0}) => -12.0
+       (reward {:angle PI :velocity 2.0} test-config {:control 0.0}) => -20.0
+       (reward {:angle PI :velocity -2.0} test-config {:control 0.0}) => -20.0)
 
 
 (facts "Implement environment"
-       (:state (->Pendulum test-config (setup 1.0))) => {:angle 1.0 :velocity 0.0 :t 0.0}
-       (:state (environment-update (->Pendulum test-config (setup 0.0)) [0.5])) => {:angle 0.5 :velocity 0.5 :t 1.0}
-       (environment-observation (->Pendulum test-config (setup 0.0))) => [1.0 0.0 0.0]
-       (environment-done? (->Pendulum test-config (setup PI))) => true
-       (environment-truncate? (->Pendulum test-config (setup 0.0))) => false
-       (environment-reward (->Pendulum test-config (setup (- PI 1.0))) [0.5]) => -3.0)
+       (:state (->Pendulum test-config (setup 1.0 0.5))) => {:angle 1.0 :velocity 0.5 :t 0.0}
+       (:state (environment-update (->Pendulum test-config (setup 0.0 0.0)) [0.5])) => {:angle 0.5 :velocity 0.5 :t 1.0}
+       (environment-observation (->Pendulum test-config (setup 0.0 0.0))) => [1.0 0.0 0.0]
+       (environment-done? (->Pendulum test-config (setup PI 0.0))) => true
+       (environment-truncate? (->Pendulum test-config (setup 0.0 0.0))) => false
+       (environment-reward (->Pendulum test-config (setup (- PI 1.0) 0.0)) [0.0]) => -3.0
+       (environment-reward (->Pendulum test-config (setup PI 0.0)) [1.0]) => -1.0)
