@@ -56,7 +56,7 @@
                       "Critic Loss:" @smooth-critic-loss))
            (when (= (mod epoch checkpoint) (dec checkpoint))
              (println "Saving models")
-             (doseq [input [[1 0 -1.0] [1 0 1.0] [0 -1 -1.0] [0 -1 1.0] [0 1 -1.0] [0 1 1.0]]]
+             (doseq [input [[1 0 -1.0] [1 0 1.0] [0 -1 -1.0] [0 -1 1.0] [0 1 -1.0] [0 1 1.0] [-1 0 -1.0] [-1 0 1.0]]]
                     (println input "->" (action (tolist (py. actor deterministic_act (tensor input))))))
              (torch/save (py. actor state_dict) "actor.pt")
              (torch/save (py. critic state_dict) "critic.pt")))
