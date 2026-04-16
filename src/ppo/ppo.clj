@@ -2,7 +2,7 @@
     (:require
       [libpython-clj2.require :refer (require-python)]
       [libpython-clj2.python :refer (py.) :as py]
-      [ppo.mlp :refer (tensor logprob-of-action without-gradient mse-loss indeterministic-act)]
+      [ppo.mlp :refer (tensor logprob-of-action without-gradient mse-loss indeterministic-act entropy-of-distribution)]
       [ppo.environment :refer (environment-observation environment-update environment-reward environment-done?
                                environment-truncate?)]))
 
@@ -135,7 +135,7 @@
   "Normalize advantages"
   [batch]
   (let [advantages (:advantages batch)]
-    (assoc batch :advantages (torch/sub advantages (torch/mean advantages)))))
+    (assoc batch :advantages (torch/div (torch/sub advantages (torch/mean advantages)) (torch/std advantages)))))
 
 
 (defn sample-with-advantage-and-critic-target
@@ -167,10 +167,11 @@
 
 (defn actor-loss
   "Compute loss value for batch of samples and actor"
-  [samples actor epsilon]
-  (let [ratios (probability-ratios samples (logprob-of-action actor))
-        loss   (clipped-surrogate-loss ratios (:advantages samples) epsilon)]
-    loss))
+  [samples actor epsilon entropy-factor]
+  (let [ratios         (probability-ratios samples (logprob-of-action actor))
+        entropy        (torch/mul entropy-factor (torch/neg (torch/mean (entropy-of-distribution actor (:observations samples)))))
+        surrogate-loss (clipped-surrogate-loss ratios (:advantages samples) epsilon)]
+    (torch/add surrogate-loss entropy)))
 
 
 (defn critic-loss

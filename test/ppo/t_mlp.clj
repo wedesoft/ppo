@@ -57,5 +57,6 @@
              (:action result) => some?
              (:logprob result) => some?
              (tolist ((logprob-of-action zero-actor) (tensor [[0 0]]) (tensor (:action result)))) => (:logprob result))
+           (tolist (entropy-of-distribution zero-actor (tensor [[0 0]]))) => [[-0.07745969295501709]]
            (:action ((indeterministic-act zero-actor) [[0 0]])) => some?
            (:logprob ((indeterministic-act zero-actor) [[0 0]])) => some?)))

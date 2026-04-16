@@ -206,8 +206,8 @@
             batch          (first samples)
             optimizer      (adam-optimizer actor 0.01 0.0)
             _              (py. optimizer zero_grad)
-            loss           (actor-loss batch actor 0.2)
+            loss           (actor-loss batch actor 0.2 0.0)
             _              (py. loss backward)
             _              (py. optimizer step)
-            updated-loss   (actor-loss batch actor 0.2)]
+            updated-loss   (actor-loss batch actor 0.2 0.0)]
         (tolist updated-loss) => #(< % (tolist loss))))

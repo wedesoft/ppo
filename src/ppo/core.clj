@@ -3,7 +3,7 @@
     (:require [clojure.math :refer (PI)]
               [libpython-clj2.require :refer (require-python)]
               [libpython-clj2.python :refer (py.) :as py]
-              [ppo.mlp :refer (Actor Critic adam-optimizer tolist tensor)]
+              [ppo.mlp :refer (Actor Critic adam-optimizer tolist tensor without-gradient entropy-of-distribution)]
               [ppo.ppo :refer (sample-with-advantage-and-critic-target actor-loss critic-loss)]
               [ppo.pendulum :refer (->Pendulum config setup action)]))
 
@@ -12,14 +12,14 @@
 
 (defn pendulum-factory
   []
-  (->Pendulum config (setup 0.0 (- (rand 20.0) 10.0))))
+  (->Pendulum config (setup (- (rand 2.0) 1.0) 0.0)))
 
 
 (defn -main [& _args]
   (let [factory          pendulum-factory
         actor            (Actor 3 16 1)
         critic           (Critic 3 16)
-        n-epochs         10000
+        n-epochs         100000
         n-updates        10
         gamma            0.98
         lambda           1.0
@@ -27,8 +27,10 @@
         batch-size       64
         n-batches        4
         checkpoint       100
-        actor-optimizer  (adam-optimizer actor 0.005 0.0)
-        critic-optimizer (adam-optimizer critic 0.005 0.0)]
+        entropy-factor   (atom 0.01)
+        entropy-decay    0.999
+        actor-optimizer  (adam-optimizer actor 0.0002 0.0)
+        critic-optimizer (adam-optimizer critic 0.0002 0.0)]
     (when (.exists (java.io.File. "actor.pt"))
       (py. actor load_state_dict (torch/load "actor.pt")))
     (when (.exists (java.io.File. "critic.pt"))
@@ -40,7 +42,7 @@
                                                                           batch-size gamma lambda)]
              (doseq [k (range n-updates)]
                     (doseq [batch samples]
-                           (let [loss (actor-loss batch actor epsilon)]
+                           (let [loss (actor-loss batch actor epsilon @entropy-factor)]
                              (py. actor-optimizer zero_grad)
                              (py. loss backward)
                              (py. actor-optimizer step)
@@ -53,13 +55,16 @@
                              (swap! smooth-critic-loss (fn [x] (+ (* 0.97 x) (* 0.01 (tolist loss))))))))
              (println "Epoch:" epoch
                       "Actor Loss:" @smooth-actor-loss
-                      "Critic Loss:" @smooth-critic-loss))
-           (when (= (mod epoch checkpoint) (dec checkpoint))
-             (println "Saving models")
+                      "Critic Loss:" @smooth-critic-loss
+                      "Entropy Factor:" @entropy-factor))
+           (without-gradient
              (doseq [input [[1 0 -1.0] [1 0 1.0] [0 -1 -1.0] [0 -1 1.0] [0 1 -1.0] [0 1 1.0] [-1 0 -1.0] [-1 0 1.0]]]
                     (println input
                              "->" (action (tolist (py. actor deterministic_act (tensor input))))
-                             "entropy" (tolist (py. (py. actor get_dist (tensor input)) entropy))))
+                             "entropy" (tolist (entropy-of-distribution actor (tensor input))))))
+           (swap! entropy-factor * entropy-decay)
+           (when (= (mod epoch checkpoint) (dec checkpoint))
+             (println "Saving models")
              (torch/save (py. actor state_dict) "actor.pt")
              (torch/save (py. critic state_dict) "critic.pt")))
     (torch/save (py. actor state_dict) "actor.pt")

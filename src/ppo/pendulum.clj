@@ -25,8 +25,9 @@
    :dt (/ 1.0 frame-rate)
    :save false
    :timeout 12.0
-   :target-angle 0.1
-   :target-velocity 0.2
+   :final-reward 1.0
+   :target-angle 0.25
+   :target-velocity 2.0
    :angle-weight 0.01
    :velocity-weight 0.001
    :control-weight 0.0001})
@@ -86,8 +87,8 @@
 
 (defn observation
   "Get observation from state"
-  [{:keys [angle velocity]}]
-  [(cos angle) (sin angle) velocity])
+  [{:keys [angle velocity]} {:keys [max-speed]}]
+  [(cos angle) (sin angle) (/ velocity max-speed)])
 
 
 (defn action
@@ -115,9 +116,8 @@
   ([state]
    (done? state config))
   ([{:keys [angle velocity t]} {:keys [target-angle target-velocity timeout]}]
-   (or (>= t timeout)
-       (and (<= (abs (up-deviation angle)) target-angle)
-            (<= (abs velocity) target-velocity)))))
+   (and (<= (abs (up-deviation angle)) target-angle)
+        (<= (abs velocity) target-velocity))))
 
 
 (defn sqr
@@ -128,10 +128,11 @@
 
 (defn reward
   "Reward function"
-  [{:keys [angle velocity]} {:keys [angle-weight velocity-weight control-weight]} {:keys [control]}]
-  (- (+ (* angle-weight (sqr (up-deviation angle)))
-        (* velocity-weight (sqr velocity))
-        (* control-weight (sqr control)))))
+  [{:keys [angle velocity] :as state} {:keys [angle-weight velocity-weight control-weight final-reward] :as config} {:keys [control]}]
+  (- (if (done? state config) final-reward 0.0)
+     (* angle-weight (sqr (up-deviation angle)))
+     (* velocity-weight (sqr velocity))
+     (* control-weight (sqr control))))
 
 
 (defrecord Pendulum [config state]
@@ -139,7 +140,7 @@
   (environment-update [_this input]
     (->Pendulum config (update-state state (action input) config)))
   (environment-observation [_this]
-    (observation state))
+    (observation state config))
   (environment-done? [_this]
     (done? state config))
   (environment-truncate? [_this]
@@ -176,14 +177,16 @@
     (q/sketch
       :title "Inverted Pendulum with Mouse Control"
       :size [854 480]
-      :setup #(setup 0.0 (- (rand 2.0) 1.0))
+      :setup #(setup (- (rand 2.0) 1.0) 0.0)
       :update (fn [state]
                   (let [observation (observation state)
                         action      (if (q/mouse-pressed?)
                                       {:control (- (/ (q/mouse-x) (/ (q/width) 2.0)) 1.0)}
                                       (action (tolist (py. actor deterministic_act (tensor observation)))))
-                        reward      (reward state config action)]
-                    (update-state state action)))
+                        reward      (reward state config action)
+                        state       (update-state state action)]
+                    (when (done? state) (async/close! done-chan))
+                    state))
       :draw draw-state
       :middleware [m/fun-mode]
       :on-close (fn [& _] (async/close! done-chan)))

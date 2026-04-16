@@ -153,3 +153,10 @@
   (fn [observation action]
       (let [dist (py. actor get_dist observation)]
         (py. dist log_prob action))))
+
+
+(defn entropy-of-distribution
+  "Get entropy of distribution"
+  [actor observation]
+  (let [dist (py. actor get_dist observation)]
+    (py. dist entropy)))

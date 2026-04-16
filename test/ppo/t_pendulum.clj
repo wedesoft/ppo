@@ -6,6 +6,23 @@
       [ppo.environment :refer :all]))
 
 
+(def test-config
+  {:length  1.0
+   :friction 0.1
+   :max-speed 10.0
+   :motor 1.0
+   :gravitation 10.0
+   :dt 1.0
+   :save false
+   :timeout 20.0
+   :final-reward 5.0
+   :target-angle 0.1
+   :target-velocity 0.2
+   :angle-weight 3.0
+   :velocity-weight 5.0
+   :control-weight 1.0})
+
+
 (fact "Set up pendulum"
       (setup (/ PI 2) 0.5) => {:angle (/ PI 2) :velocity 0.5 :t 0.0})
 
@@ -73,9 +90,9 @@
 
 
 (facts "Get observation array from state"
-       (observation {:angle 0.0 :velocity 0.0}) => [1.0 0.0 0.0]
-       (observation {:angle 0.0 :velocity 0.5}) => [1.0 0.0 0.5]
-       (observation {:angle (/ PI 2) :velocity 0.0}) => [(cos (/ PI 2)) 1.0 0.0])
+       (observation {:angle 0.0 :velocity 0.0} test-config) => [1.0 0.0 0.0]
+       (observation {:angle 0.0 :velocity 0.5} test-config) => [1.0 0.0 0.05]
+       (observation {:angle (/ PI 2) :velocity 0.0} test-config) => [(cos (/ PI 2)) 1.0 0.0])
 
 
 (facts "Convert array to action"
@@ -90,22 +107,6 @@
        (truncate? {:t 50.0} {:timeout 100.0}) => false)
 
 
-(def test-config
-  {:length  1.0
-   :friction 0.1
-   :max-speed 10.0
-   :motor 1.0
-   :gravitation 10.0
-   :dt 1.0
-   :save false
-   :timeout 20.0
-   :target-angle 0.1
-   :target-velocity 0.2
-   :angle-weight 3.0
-   :velocity-weight 5.0
-   :control-weight 1.0})
-
-
 (facts "Check whether pendulum achieved target state"
        (done? {:angle 0.0 :velocity 0.0 :t 0.0} test-config) => false
        (done? {:angle (- PI 0.05) :velocity 0.0 :t 0.0} test-config) => true
@@ -113,14 +114,13 @@
        (done? {:angle (- (- PI) 0.05) :velocity 0.0 :t 0.0} test-config) => true
        (done? {:angle (+ (- PI) 0.05) :velocity 0.0 :t 0.0} test-config) => true
        (done? {:angle PI :velocity 0.4 :t 0.0} test-config) => false
-       (done? {:angle PI :velocity -0.4 :t 0.0} test-config) => false
-       (done? {:angle 0.0 :velocity 0.0 :t 20.0} test-config) => true)
+       (done? {:angle PI :velocity -0.4 :t 0.0} test-config) => false)
 
 
 (facts "Reward function"
-       (reward {:angle PI :velocity 0.0} test-config {:control 0.0}) => 0.0
-       (reward {:angle PI :velocity 0.0} test-config {:control 1.0}) => -1.0
-       (reward {:angle PI :velocity 0.0} test-config {:control -1.0}) => -1.0
+       (reward {:angle PI :velocity 0.0} test-config {:control 0.0}) => 5.0
+       (reward {:angle PI :velocity 0.0} test-config {:control 1.0}) => 4.0
+       (reward {:angle PI :velocity 0.0} test-config {:control -1.0}) => 4.0
        (reward {:angle (+ PI 2.0) :velocity 0.0} test-config {:control 0.0}) => -12.0
        (reward {:angle (- PI 2.0) :velocity 0.0} test-config {:control 0.0}) => -12.0
        (reward {:angle PI :velocity 2.0} test-config {:control 0.0}) => -20.0
@@ -134,4 +134,4 @@
        (environment-done? (->Pendulum test-config (setup PI 0.0))) => true
        (environment-truncate? (->Pendulum test-config (setup 0.0 0.0))) => false
        (environment-reward (->Pendulum test-config (setup (- PI 1.0) 0.0)) [0.5]) => -3.0
-       (environment-reward (->Pendulum test-config (setup PI 0.0)) [1.0]) => -1.0)
+       (environment-reward (->Pendulum test-config (setup PI 0.0)) [1.0]) => 4.0)
