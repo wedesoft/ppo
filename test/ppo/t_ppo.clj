@@ -121,7 +121,7 @@
 
 (facts "Associate advantages with batch of samples"
        (let [batch      {:observations [[4]] :next-observations [[2]] :rewards [2] :dones [false] :truncates [false]}
-             result     ((assoc-advantages 1.0 1.0) batch)]
+             result     ((assoc-advantages (constantly 0) 1.0 1.0) batch)]
          (:observations result) => [[4]]
          (:advantages result) => [2.0]))
 

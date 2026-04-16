@@ -1,6 +1,6 @@
 (ns ppo.core
     (:gen-class)
-    (:require [clojure.math :refer (PI)]
+    (:require [clojure.math :refer (PI cos sqrt)]
               [libpython-clj2.require :refer (require-python)]
               [libpython-clj2.python :refer (py.) :as py]
               [ppo.mlp :refer (Actor Critic adam-optimizer tolist tensor without-gradient entropy-of-distribution)]
@@ -12,13 +12,17 @@
 
 (defn pendulum-factory
   []
-  (->Pendulum config (setup (- (rand 2.0) 1.0) 0.0)))
+  (let [angle     (- (rand (* 2.0 PI)) PI)
+        energy    (* (:gravitation config) (:length config) (+ 1.0 (cos angle)))
+        max-speed (+ (sqrt (* 2.0 energy)) 2.0)
+        velocity  (- (rand (* 2.0 max-speed)) max-speed)]
+    (->Pendulum config (setup angle velocity))))
 
 
 (defn -main [& _args]
   (let [factory          pendulum-factory
-        actor            (Actor 3 16 1)
-        critic           (Critic 3 16)
+        actor            (Actor 3 100 1)
+        critic           (Critic 3 100)
         n-epochs         100000
         n-updates        10
         gamma            0.98
@@ -27,10 +31,11 @@
         batch-size       64
         n-batches        4
         checkpoint       100
-        entropy-factor   (atom 0.01)
+        entropy-factor   (atom 0.001)
         entropy-decay    0.999
-        actor-optimizer  (adam-optimizer actor 0.0002 0.0)
-        critic-optimizer (adam-optimizer critic 0.0002 0.0)]
+        lr               0.0002
+        actor-optimizer  (adam-optimizer actor lr 0.0)
+        critic-optimizer (adam-optimizer critic (* 3 lr) 0.0)]
     (when (.exists (java.io.File. "actor.pt"))
       (py. actor load_state_dict (torch/load "actor.pt")))
     (when (.exists (java.io.File. "critic.pt"))

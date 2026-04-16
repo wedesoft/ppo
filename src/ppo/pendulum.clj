@@ -27,9 +27,9 @@
    :timeout 12.0
    :target-angle 0.25
    :target-time 1.0
-   :angle-weight 0.01
-   :velocity-weight 0.001
-   :control-weight 0.0001})
+   :angle-weight 1.0
+   :velocity-weight 0.1
+   :control-weight 0.01})
 
 
 (defn setup
@@ -178,7 +178,7 @@
 
 
 (defn -main [& _args]
-  (let [actor     (Actor 3 16 1)
+  (let [actor     (Actor 3 100 1)
         done-chan (async/chan)]
     (when (.exists (java.io.File. "actor.pt"))
       (py. actor load_state_dict (torch/load "actor.pt")))
@@ -187,7 +187,7 @@
       :size [854 480]
       :setup #(setup (- (rand 2.0) 1.0) 0.0)
       :update (fn [state]
-                  (let [observation (observation state)
+                  (let [observation (observation state config)
                         action      (if (q/mouse-pressed?)
                                       {:control (- (/ (q/mouse-x) (/ (q/width) 2.0)) 1.0)}
                                       (action (tolist (py. actor deterministic_act (tensor observation)))))
