@@ -27,9 +27,9 @@
    :timeout 12.0
    :target-angle 0.1
    :target-velocity 0.2
-   :angle-weight 1.0
-   :velocity-weight 0.1
-   :control-weight 0.01})
+   :angle-weight 0.01
+   :velocity-weight 0.001
+   :control-weight 0.0001})
 
 
 (defn setup

@@ -12,14 +12,14 @@
 
 (defn pendulum-factory
   []
-  (->Pendulum config (setup 0.0 (- (rand 20.0) 10.0))))
+  (->Pendulum config (setup 0.0 (- (rand 2.0) 1.0))))
 
 
 (defn -main [& _args]
   (let [factory          pendulum-factory
         actor            (Actor 3 150 1)
         critic           (Critic 3 150)
-        n-epochs         500
+        n-epochs         10000
         n-updates        10
         gamma            0.98
         lambda           1.0
