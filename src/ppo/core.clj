@@ -7,7 +7,8 @@
               [ppo.ppo :refer (sample-with-advantage-and-critic-target actor-loss critic-loss)]
               [ppo.pendulum :refer (->Pendulum config setup action)]))
 
-(require-python '[torch :as torch])
+(require-python '[torch :as torch]
+                '[torch.nn.utils :as utils])
 
 
 (defn pendulum-factory
@@ -25,17 +26,18 @@
         critic           (Critic 3 100)
         n-epochs         100000
         n-updates        10
-        gamma            0.98
+        gamma            0.99
         lambda           1.0
         epsilon          0.2
         batch-size       64
         n-batches        4
         checkpoint       100
-        entropy-factor   (atom 0.001)
-        entropy-decay    0.999
+        entropy-factor   (atom 0.005)
+        entropy-decay    1.0
         lr               0.0002
-        actor-optimizer  (adam-optimizer actor lr 0.0)
-        critic-optimizer (adam-optimizer critic (* 3 lr) 0.0)]
+        weight-decay     0.0001
+        actor-optimizer  (adam-optimizer actor lr weight-decay)
+        critic-optimizer (adam-optimizer critic (* 3 lr) (* 3 weight-decay))]
     (when (.exists (java.io.File. "actor.pt"))
       (py. actor load_state_dict (torch/load "actor.pt")))
     (when (.exists (java.io.File. "critic.pt"))
@@ -50,6 +52,7 @@
                            (let [loss (actor-loss batch actor epsilon @entropy-factor)]
                              (py. actor-optimizer zero_grad)
                              (py. loss backward)
+                             (utils/clip_grad_norm_(py. actor parameters) 0.5)
                              (py. actor-optimizer step)
                              (swap! smooth-actor-loss (fn [x] (+ (* 0.95 x) (* 0.01 (tolist loss))))) ))
                     (doseq [batch samples]
