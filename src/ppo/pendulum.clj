@@ -25,9 +25,8 @@
    :dt (/ 1.0 frame-rate)
    :save false
    :timeout 12.0
-   :final-reward 1.0
    :target-angle 0.25
-   :target-velocity 2.0
+   :target-time 1.0
    :angle-weight 0.01
    :velocity-weight 0.001
    :control-weight 0.0001})
@@ -36,9 +35,10 @@
 (defn setup
   "Initialise pendulum"
   [angle velocity]
-  {:angle    angle
-   :velocity velocity
-   :t        0.0})
+  {:angle          angle
+   :velocity       velocity
+   :t              0.0
+   :time-at-target 0.0})
 
 
 (defn pendulum-gravity
@@ -68,21 +68,37 @@
   (* (min friction (/ (abs velocity) dt)) (- (sign velocity))))
 
 
+(defn up-deviation
+  "Angular deviation from up angle"
+  [angle]
+  (- (mod angle (* 2 PI)) PI))
+
+
+(defn at-target?
+  "Decide whether pendulum is at target state"
+  ([state]
+   (at-target? state config))
+  ([{:keys [angle]} {:keys [target-angle]}]
+   (<= (abs (up-deviation angle)) target-angle)))
+
+
 (defn update-state
   "Perform simulation step of pendulum"
   ([state action]
    (update-state state action config))
-  ([{:keys [angle velocity t]} {:keys [control]} {:keys [dt friction motor gravitation length max-speed]}]
-   (let [friction     (friction-acceleration friction velocity dt)
-         gravity      (pendulum-gravity gravitation length angle)
-         motor        (motor-acceleration control motor)
-         t            (+ t dt)
-         acceleration (+ motor gravity friction)
-         velocity     (max (- max-speed) (min max-speed (+ velocity (* acceleration dt))))
-         angle        (+ angle (* velocity dt))]
-     {:angle    angle
-      :velocity velocity
-      :t        t})))
+  ([{:keys [angle velocity t time-at-target] :as state} {:keys [control]} {:keys [dt friction motor gravitation length max-speed]}]
+   (let [friction       (friction-acceleration friction velocity dt)
+         gravity        (pendulum-gravity gravitation length angle)
+         motor          (motor-acceleration control motor)
+         t              (+ t dt)
+         time-at-target (if (at-target? state config) (+ time-at-target dt) 0.0)
+         acceleration   (+ motor gravity friction)
+         velocity       (max (- max-speed) (min max-speed (+ velocity (* acceleration dt))))
+         angle          (+ angle (* velocity dt))]
+     {:angle          angle
+      :velocity       velocity
+      :t              t
+      :time-at-target time-at-target})))
 
 
 (defn observation
@@ -105,19 +121,12 @@
    false))
 
 
-(defn up-deviation
-  "Angular deviation from up angle"
-  [angle]
-  (- (mod angle (* 2 PI)) PI))
-
-
 (defn done?
   "Decide whether pendulum achieved target state"
   ([state]
    (done? state config))
-  ([{:keys [angle velocity t]} {:keys [target-angle target-velocity timeout]}]
-   (and (<= (abs (up-deviation angle)) target-angle)
-        (<= (abs velocity) target-velocity))))
+  ([{:keys [angle time-at-target]} {:keys [target-angle target-time]}]
+   (and (>= time-at-target target-time) (<= (abs (up-deviation angle)) target-angle))))
 
 
 (defn sqr
@@ -129,10 +138,9 @@
 (defn reward
   "Reward function"
   [{:keys [angle velocity] :as state} {:keys [angle-weight velocity-weight control-weight final-reward] :as config} {:keys [control]}]
-  (- (if (done? state config) final-reward 0.0)
-     (* angle-weight (sqr (up-deviation angle)))
-     (* velocity-weight (sqr velocity))
-     (* control-weight (sqr control))))
+  (- (+ (* angle-weight (sqr (up-deviation angle)))
+        (* velocity-weight (sqr velocity))
+        (* control-weight (sqr control)))))
 
 
 (defrecord Pendulum [config state]
