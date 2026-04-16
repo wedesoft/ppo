@@ -50,7 +50,8 @@
              self
              {"fc1" (nn/Linear observation-size hidden-units)
               "fc2" (nn/Linear hidden-units hidden-units)
-              "fc3" (nn/Linear hidden-units 1)})
+              "fc3" (nn/Linear hidden-units hidden-units)
+              "fc4" (nn/Linear hidden-units 1)})
            nil))
      "forward"
      (py/make-instance-fn
@@ -59,7 +60,9 @@
                  x (torch/tanh x)
                  x (py. self fc2 x)
                  x (torch/tanh x)
-                 x (py. self fc3 x)]
+                 x (py. self fc3 x)
+                 x (torch/tanh x)
+                 x (py. self fc4 x)]
              (torch/squeeze x -1))))}))
 
 
@@ -74,6 +77,7 @@
              self
              {"fc1"     (nn/Linear observation-size hidden-units)
               "fc2"     (nn/Linear hidden-units hidden-units)
+              "fc3"     (nn/Linear hidden-units hidden-units)
               "fcalpha" (nn/Linear hidden-units action-size)
               "fcbeta"  (nn/Linear hidden-units action-size)})
            nil))
@@ -83,6 +87,8 @@
            (let [x (py. self fc1 x)
                  x (torch/tanh x)
                  x (py. self fc2 x)
+                 x (torch/tanh x)
+                 x (py. self fc3 x)
                  x (torch/tanh x)
                  alpha (torch/add 1.0 (F/softplus (py. self fcalpha x)))
                  beta  (torch/add 1.0 (F/softplus (py. self fcbeta x)))]

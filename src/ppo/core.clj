@@ -12,13 +12,13 @@
 
 (defn pendulum-factory
   []
-  (->Pendulum config (setup 0.0 (- (rand 2.0) 1.0))))
+  (->Pendulum config (setup 0.0 (- (rand 20.0) 10.0))))
 
 
 (defn -main [& _args]
   (let [factory          pendulum-factory
-        actor            (Actor 3 150 1)
-        critic           (Critic 3 150)
+        actor            (Actor 3 16 1)
+        critic           (Critic 3 16)
         n-epochs         10000
         n-updates        10
         gamma            0.98
@@ -27,8 +27,8 @@
         batch-size       64
         n-batches        4
         checkpoint       100
-        actor-optimizer  (adam-optimizer actor 0.0002 0.001)
-        critic-optimizer (adam-optimizer critic 0.0002 0.001)]
+        actor-optimizer  (adam-optimizer actor 0.005 0.0)
+        critic-optimizer (adam-optimizer critic 0.005 0.0)]
     (when (.exists (java.io.File. "actor.pt"))
       (py. actor load_state_dict (torch/load "actor.pt")))
     (when (.exists (java.io.File. "critic.pt"))
@@ -57,7 +57,9 @@
            (when (= (mod epoch checkpoint) (dec checkpoint))
              (println "Saving models")
              (doseq [input [[1 0 -1.0] [1 0 1.0] [0 -1 -1.0] [0 -1 1.0] [0 1 -1.0] [0 1 1.0] [-1 0 -1.0] [-1 0 1.0]]]
-                    (println input "->" (action (tolist (py. actor deterministic_act (tensor input))))))
+                    (println input
+                             "->" (action (tolist (py. actor deterministic_act (tensor input))))
+                             "entropy" (tolist (py. (py. actor get_dist (tensor input)) entropy))))
              (torch/save (py. actor state_dict) "actor.pt")
              (torch/save (py. critic state_dict) "critic.pt")))
     (torch/save (py. actor state_dict) "actor.pt")

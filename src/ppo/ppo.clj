@@ -135,7 +135,7 @@
   "Normalize advantages"
   [batch]
   (let [advantages (:advantages batch)]
-    (assoc batch :advantages (torch/div (torch/sub advantages (torch/mean advantages)) (torch/std advantages)))))
+    (assoc batch :advantages (torch/sub advantages (torch/mean advantages)))))
 
 
 (defn sample-with-advantage-and-critic-target

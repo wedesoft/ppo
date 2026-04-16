@@ -169,7 +169,7 @@
 
 
 (defn -main [& _args]
-  (let [actor     (Actor 3 150 1)
+  (let [actor     (Actor 3 16 1)
         done-chan (async/chan)]
     (when (.exists (java.io.File. "actor.pt"))
       (py. actor load_state_dict (torch/load "actor.pt")))
