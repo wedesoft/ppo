@@ -23,7 +23,7 @@
 
 
 (fact "Set up pendulum"
-      (setup (/ PI 2) 0.5) => {:angle (/ PI 2) :velocity 0.5 :t 0.0 :time-at-target 0.0})
+      (setup (/ PI 2) 0.5) => {:angle (/ PI 2) :velocity 0.5 :t 0.0})
 
 
 (facts "Angular acceleration due to gravitation"
@@ -56,40 +56,36 @@
 
 
 (facts "Update state"
-       (update-state {:angle 0.0 :velocity 0.0 :t 0.0 :time-at-target 0.0}
+       (update-state {:angle 0.0 :velocity 0.0 :t 0.0}
                      {:control 0.0} {:dt 1.0 :friction 0.0 :gravitation 9.81 :length 1.0 :motor 2.0 :max-speed 10.0})
-       => {:angle 0.0 :velocity 0.0 :t 1.0 :time-at-target 0.0}
-       (:time-at-target
-         (update-state {:angle PI :velocity 0.0 :t 0.0 :time-at-target 0.0}
-                       {:control 0.0} {:dt 1.0 :friction 0.0 :gravitation 9.81 :length 1.0 :motor 2.0 :max-speed 10.0}))
-       => 1.0
-       (update-state {:angle 0.0 :velocity 0.0 :t 2.0 :time-at-target 0.0}
+       => {:angle 0.0 :velocity 0.0 :t 1.0}
+       (update-state {:angle 0.0 :velocity 0.0 :t 2.0}
                      {:control 0.0} {:dt 1.0 :friction 0.0 :gravitation 9.81 :length 1.0 :motor 2.0 :max-speed 10.0})
-       => {:angle 0.0 :velocity 0.0 :t 3.0 :time-at-target 0.0}
-       (update-state {:angle 0.0 :velocity 0.1 :t 0.0 :time-at-target 0.0}
+       => {:angle 0.0 :velocity 0.0 :t 3.0}
+       (update-state {:angle 0.0 :velocity 0.1 :t 0.0}
                      {:control 0.0} {:dt 1.0 :friction 0.0 :gravitation 9.81 :length 1.0 :motor 2.0 :max-speed 10.0})
-       => {:angle 0.1 :velocity 0.1 :t 1.0 :time-at-target 0.0}
-       (update-state {:angle 0.0 :velocity 0.1 :t 0.0 :time-at-target 0.0}
+       => {:angle 0.1 :velocity 0.1 :t 1.0}
+       (update-state {:angle 0.0 :velocity 0.1 :t 0.0}
                      {:control 0.0} {:dt 0.5 :friction 0.0 :gravitation 9.81 :length 1.0 :motor 2.0 :max-speed 10.0})
-       => {:angle 0.05 :velocity 0.1 :t 0.5 :time-at-target 0.0}
-       (update-state {:angle 0.0 :velocity 1.0 :t 0.0 :time-at-target 0.0}
+       => {:angle 0.05 :velocity 0.1 :t 0.5}
+       (update-state {:angle 0.0 :velocity 1.0 :t 0.0}
                      {:control 0.0} {:dt 1.0 :friction 0.5 :gravitation 9.81 :length 1.0 :motor 2.0 :max-speed 10.0})
-       => {:angle 0.5 :velocity 0.5 :t 1.0 :time-at-target 0.0}
-       (update-state {:angle 0.0 :velocity 1.0 :t 0.0 :time-at-target 0.0}
+       => {:angle 0.5 :velocity 0.5 :t 1.0}
+       (update-state {:angle 0.0 :velocity 1.0 :t 0.0}
                      {:control 0.0} {:dt 1.0 :friction 2.0 :gravitation 9.81 :length 1.0 :motor 2.0 :max-speed 10.0})
-       => {:angle 0.0 :velocity 0.0 :t 1.0 :time-at-target 0.0}
-       (update-state {:angle (/ PI 2) :velocity 0.0 :t 0.0 :time-at-target 0.0}
+       => {:angle 0.0 :velocity 0.0 :t 1.0}
+       (update-state {:angle (/ PI 2) :velocity 0.0 :t 0.0}
                      {:control 0.0} {:dt 1.0 :friction 0.0 :gravitation 9.81 :length 1.0 :motor 2.0 :max-speed 10.0})
-       => {:angle (- (/ PI 2) 9.81) :velocity -9.81 :t 1.0 :time-at-target 0.0}
-       (update-state {:angle 0.0 :velocity 0.0 :t 0.0 :time-at-target 0.0}
+       => {:angle (- (/ PI 2) 9.81) :velocity -9.81 :t 1.0}
+       (update-state {:angle 0.0 :velocity 0.0 :t 0.0}
                      {:control 1.0} {:dt 1.0 :friction 0.0 :gravitation 9.81 :length 1.0 :motor 2.0 :max-speed 10.0})
-       => {:angle 2.0 :velocity 2.0 :t 1.0 :time-at-target 0.0}
-       (update-state {:angle 0.0 :velocity 0.0 :t 0.0 :time-at-target 0.0}
+       => {:angle 2.0 :velocity 2.0 :t 1.0}
+       (update-state {:angle 0.0 :velocity 0.0 :t 0.0}
                      {:control 1.0} {:dt 1.0 :friction 0.0 :gravitation 9.81 :length 1.0 :motor 2.0 :max-speed 1.0})
-       => {:angle 1.0 :velocity 1.0 :t 1.0 :time-at-target 0.0}
-       (update-state {:angle 0.0 :velocity 0.0 :t 0.0 :time-at-target 0.0}
+       => {:angle 1.0 :velocity 1.0 :t 1.0}
+       (update-state {:angle 0.0 :velocity 0.0 :t 0.0}
                      {:control -1.0} {:dt 1.0 :friction 0.0 :gravitation 9.81 :length 1.0 :motor 2.0 :max-speed 1.0})
-       => {:angle -1.0 :velocity -1.0 :t 1.0 :time-at-target 0.0})
+       => {:angle -1.0 :velocity -1.0 :t 1.0})
 
 
 (facts "Get observation array from state"
@@ -107,16 +103,12 @@
 
 
 (facts "Check whether a run should be aborted"
-       (truncate? {:t 50.0} {:timeout 100.0}) => false)
+       (truncate? {:t 50.0} {:timeout 100.0}) => false
+       (truncate? {:t 100.0} {:timeout 100.0}) => true)
 
 
 (facts "Check whether pendulum achieved target state"
-       (done? {:angle 0.0 :t 0.0 :time-at-target 2.0} test-config) => false
-       (done? {:angle (- PI 0.05) :t 0.0 :time-at-target 2.0} test-config) => true
-       (done? {:angle (+ PI 0.05) :t 0.0 :time-at-target 2.0} test-config) => true
-       (done? {:angle PI :t 0.0 :time-at-target 0.0} test-config) => false
-       (done? {:angle (- (- PI) 0.05) :t 0.0 :time-at-target 2.0} test-config) => true
-       (done? {:angle (+ (- PI) 0.05) :t 0.0 :time-at-target 2.0} test-config) => true)
+       (done? {:angle 0.0 :t 0.0} test-config) => false)
 
 
 (facts "Reward function"
@@ -130,9 +122,9 @@
 
 
 (facts "Implement environment"
-       (:state (->Pendulum test-config (setup 1.0 0.5))) => {:angle 1.0 :velocity 0.5 :t 0.0 :time-at-target 0.0}
+       (:state (->Pendulum test-config (setup 1.0 0.5))) => {:angle 1.0 :velocity 0.5 :t 0.0}
        (:state (environment-update (->Pendulum test-config (setup 0.0 0.0)) [0.75]))
-       => {:angle 0.5 :velocity 0.5 :t 1.0 :time-at-target 0.0}
+       => {:angle 0.5 :velocity 0.5 :t 1.0}
        (environment-observation (->Pendulum test-config (setup 0.0 0.0))) => [1.0 0.0 0.0]
        (environment-done? (->Pendulum test-config (setup PI 0.0))) => false
        (environment-truncate? (->Pendulum test-config (setup 0.0 0.0))) => false

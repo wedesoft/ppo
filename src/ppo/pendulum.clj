@@ -37,8 +37,7 @@
   [angle velocity]
   {:angle          angle
    :velocity       velocity
-   :t              0.0
-   :time-at-target 0.0})
+   :t              0.0})
 
 
 (defn pendulum-gravity
@@ -86,19 +85,17 @@
   "Perform simulation step of pendulum"
   ([state action]
    (update-state state action config))
-  ([{:keys [angle velocity t time-at-target] :as state} {:keys [control]} {:keys [dt friction motor gravitation length max-speed]}]
+  ([{:keys [angle velocity t] :as state} {:keys [control]} {:keys [dt friction motor gravitation length max-speed]}]
    (let [friction       (friction-acceleration friction velocity dt)
          gravity        (pendulum-gravity gravitation length angle)
          motor          (motor-acceleration control motor)
          t              (+ t dt)
-         time-at-target (if (at-target? state config) (+ time-at-target dt) 0.0)
          acceleration   (+ motor gravity friction)
          velocity       (max (- max-speed) (min max-speed (+ velocity (* acceleration dt))))
          angle          (+ angle (* velocity dt))]
      {:angle          angle
       :velocity       velocity
-      :t              t
-      :time-at-target time-at-target})))
+      :t              t})))
 
 
 (defn observation
@@ -118,15 +115,13 @@
   ([state]
    (truncate? state config))
   ([{:keys [t]} {:keys [timeout]}]
-   false))
+   (>= t timeout)))
 
 
 (defn done?
   "Decide whether pendulum achieved target state"
-  ([state]
-   (done? state config))
-  ([{:keys [angle time-at-target]} {:keys [target-angle target-time]}]
-   (and (>= time-at-target target-time) (<= (abs (up-deviation angle)) target-angle))))
+  ([state & _args]
+   false))
 
 
 (defn sqr

@@ -28,14 +28,14 @@
         n-updates        10
         gamma            0.99
         lambda           1.0
-        epsilon          0.2
+        epsilon          0.1
         batch-size       64
         n-batches        4
         checkpoint       100
-        entropy-factor   (atom 0.005)
+        entropy-factor   (atom 0.002)
         entropy-decay    1.0
-        lr               0.0002
-        weight-decay     0.0001
+        lr               2e-5
+        weight-decay     1e-4
         actor-optimizer  (adam-optimizer actor lr weight-decay)
         critic-optimizer (adam-optimizer critic (* 3 lr) (* 3 weight-decay))]
     (when (.exists (java.io.File. "actor.pt"))
