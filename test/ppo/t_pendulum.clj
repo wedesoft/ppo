@@ -27,8 +27,8 @@
 
 (facts "Angular acceleration due to gravitation"
        (pendulum-gravity 0.0 1.0 0.0) => 0.0
-       (pendulum-gravity 9.81 1.0 (/ PI 2)) => -9.81
-       (pendulum-gravity 9.81 2.0 (/ PI 2)) => -4.905
+       (pendulum-gravity 9.81 1.0 (/ PI 2)) => 9.81
+       (pendulum-gravity 9.81 2.0 (/ PI 2)) => 4.905
        (pendulum-gravity 9.81 1.0 0.0) => 0.0)
 
 
@@ -61,7 +61,7 @@
        => {:angle 0.05 :velocity 0.1 :t 0.5}
        (update-state {:angle (/ PI 2) :velocity 0.0 :t 0.0}
                      {:control 0.0} {:dt 1.0 :gravitation 9.81 :length 1.0 :motor 2.0 :max-speed 10.0})
-       => {:angle (- (/ PI 2) 9.81) :velocity -9.81 :t 1.0}
+       => {:angle (+ (/ PI 2) 9.81) :velocity 9.81 :t 1.0}
        (update-state {:angle 0.0 :velocity 0.0 :t 0.0}
                      {:control 1.0} {:dt 1.0 :gravitation 9.81 :length 1.0 :motor 2.0 :max-speed 10.0})
        => {:angle 2.0 :velocity 2.0 :t 1.0}
@@ -97,13 +97,17 @@
 
 
 (facts "Reward function"
-       (reward {:angle PI :velocity 0.0} test-config {:control 0.0}) => 0.0
-       (reward {:angle PI :velocity 0.0} test-config {:control 1.0}) => -1.0
-       (reward {:angle PI :velocity 0.0} test-config {:control -1.0}) => -1.0
-       (reward {:angle (+ PI 2.0) :velocity 0.0} test-config {:control 0.0}) => -12.0
-       (reward {:angle (- PI 2.0) :velocity 0.0} test-config {:control 0.0}) => -12.0
-       (reward {:angle PI :velocity 2.0} test-config {:control 0.0}) => -20.0
-       (reward {:angle PI :velocity -2.0} test-config {:control 0.0}) => -20.0)
+       (reward {:angle 0.0 :velocity 0.0} test-config {:control 0.0}) => 0.0
+       (reward {:angle 0.0 :velocity 0.0} test-config {:control 1.0}) => -1.0
+       (reward {:angle 0.0 :velocity 0.0} test-config {:control -1.0}) => -1.0
+       (reward {:angle 2.0 :velocity 0.0} test-config {:control 0.0}) => -12.0
+       (reward {:angle (+ 2.0 (* 2.0 PI)) :velocity 0.0} test-config {:control 0.0}) => -12.0
+       (reward {:angle (- 2.0 (* 2.0 PI)) :velocity 0.0} test-config {:control 0.0}) => -12.0
+       (reward {:angle -2.0 :velocity 0.0} test-config {:control 0.0}) => -12.0
+       (reward {:angle (+ -2.0 (* 2.0 PI)) :velocity 0.0} test-config {:control 0.0}) => -12.0
+       (reward {:angle (- -2.0 (* 2.0 PI)) :velocity 0.0} test-config {:control 0.0}) => -12.0
+       (reward {:angle 0.0 :velocity 2.0} test-config {:control 0.0}) => -20.0
+       (reward {:angle 0.0 :velocity -2.0} test-config {:control 0.0}) => -20.0)
 
 
 (facts "Implement environment"
@@ -113,5 +117,5 @@
        (environment-observation (->Pendulum test-config (setup 0.0 0.0))) => [1.0 0.0 0.0]
        (environment-done? (->Pendulum test-config (setup PI 0.0))) => false
        (environment-truncate? (->Pendulum test-config (setup 0.0 0.0))) => false
-       (environment-reward (->Pendulum test-config (setup (- PI 1.0) 0.0)) [0.5]) => -3.0
-       (environment-reward (->Pendulum test-config (setup PI 0.0)) [1.0]) => -1.0)
+       (environment-reward (->Pendulum test-config (setup -1.0 0.0)) [0.5]) => -3.0
+       (environment-reward (->Pendulum test-config (setup 0.0 0.0)) [1.0]) => -1.0)

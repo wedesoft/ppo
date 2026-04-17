@@ -42,7 +42,7 @@
 (defn pendulum-gravity
   "Determine angular acceleration due to gravity"
   [gravitation length angle]
-  (/ (* (sin angle) (- gravitation)) length))
+  (/ (* (sin angle) gravitation) length))
 
 
 (defn motor-acceleration
@@ -60,18 +60,10 @@
     :else 0))
 
 
-(defn up-deviation
+(defn normalize-angle
   "Angular deviation from up angle"
   [angle]
-  (- (mod angle (* 2 PI)) PI))
-
-
-(defn at-target?
-  "Decide whether pendulum is at target state"
-  ([state]
-   (at-target? state config))
-  ([{:keys [angle]} {:keys [target-angle]}]
-   (<= (abs (up-deviation angle)) target-angle)))
+  (- (mod (+ angle PI) (* 2 PI)) PI))
 
 
 (defn update-state
@@ -125,7 +117,7 @@
 (defn reward
   "Reward function"
   [{:keys [angle velocity] :as state} {:keys [angle-weight velocity-weight control-weight final-reward] :as config} {:keys [control]}]
-  (- (+ (* angle-weight (sqr (up-deviation angle)))
+  (- (+ (* angle-weight (sqr (normalize-angle angle)))
         (* velocity-weight (sqr velocity))
         (* control-weight (sqr control)))))
 
@@ -149,7 +141,7 @@
         origin-y   (/ (q/height) 2)
         length     (* 0.5 (q/height) (:length config))
         pendulum-x (+ origin-x (* length (sin angle)))
-        pendulum-y (+ origin-y (* length (cos angle)))
+        pendulum-y (- origin-y (* length (cos angle)))
         size       (* 0.05 (q/height))]
     (q/frame-rate frame-rate)
     (q/background 255)
@@ -172,11 +164,11 @@
     (q/sketch
       :title "Inverted Pendulum with Mouse Control"
       :size [854 480]
-      :setup #(setup (- (rand 2.0) 1.0) 0.0)
+      :setup #(setup PI 0.0)
       :update (fn [state]
                   (let [observation (observation state config)
                         action      (if (q/mouse-pressed?)
-                                      {:control (- (/ (q/mouse-x) (/ (q/width) 2.0)) 1.0)}
+                                      {:control (- 1.0 (/ (q/mouse-x) (/ (q/width) 2.0)))}
                                       (action (tolist (py. actor deterministic_act (tensor observation)))))
                         reward      (reward state config action)
                         state       (update-state state action)]

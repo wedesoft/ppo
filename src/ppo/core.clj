@@ -14,9 +14,7 @@
 (defn pendulum-factory
   []
   (let [angle     (- (rand (* 2.0 PI)) PI)
-        energy    (* (:gravitation config) (:length config) (+ 1.0 (cos angle)))
-        max-speed (+ (sqrt (* 2.0 energy)) 2.0)
-        velocity  (- (rand (* 2.0 max-speed)) max-speed)]
+        velocity  (- (rand 2.0) 1.0)]
     (->Pendulum config (setup angle velocity))))
 
 
