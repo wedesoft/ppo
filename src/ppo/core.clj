@@ -14,7 +14,8 @@
 (defn pendulum-factory
   []
   (let [angle     (- (rand (* 2.0 PI)) PI)
-        velocity  (- (rand 2.0) 1.0)]
+        max-speed (:max-speed config)
+        velocity  (- (rand (* 2.0 max-speed)) max-speed)]
     (->Pendulum config (setup angle velocity))))
 
 
@@ -27,8 +28,8 @@
         gamma            0.99
         lambda           1.0
         epsilon          0.1
-        n-batches        4
-        batch-size       (/ 200 n-batches)
+        n-batches        16
+        batch-size       50
         checkpoint       100
         entropy-factor   (atom 0.002) ; 0.002 -> 0.001 at 1800
         entropy-decay    1.0
@@ -52,13 +53,13 @@
                              (py. loss backward)
                              (utils/clip_grad_norm_(py. actor parameters) 0.5)
                              (py. actor-optimizer step)
-                             (swap! smooth-actor-loss (fn [x] (+ (* 0.95 x) (* 0.01 (tolist loss))))) ))
+                             (swap! smooth-actor-loss (fn [x] (+ (* 0.95 x) (* 0.05 (tolist loss))))) ))
                     (doseq [batch samples]
                            (let [loss (critic-loss batch critic)]
                              (py. critic-optimizer zero_grad)
                              (py. loss backward)
                              (py. critic-optimizer step)
-                             (swap! smooth-critic-loss (fn [x] (+ (* 0.97 x) (* 0.01 (tolist loss))))))))
+                             (swap! smooth-critic-loss (fn [x] (+ (* 0.95 x) (* 0.05 (tolist loss))))))))
              (println "Epoch:" epoch
                       "Actor Loss:" @smooth-actor-loss
                       "Critic Loss:" @smooth-critic-loss
