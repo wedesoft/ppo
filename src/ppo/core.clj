@@ -24,15 +24,15 @@
   (let [factory          pendulum-factory
         actor            (Actor 3 100 1)
         critic           (Critic 3 100)
-        n-epochs         100000
+        n-epochs         10000
         n-updates        10
         gamma            0.99
         lambda           1.0
         epsilon          0.1
-        batch-size       64
-        n-batches        4
+        batch-size       25
+        n-batches        8
         checkpoint       100
-        entropy-factor   (atom 0.002)
+        entropy-factor   (atom 0.002) ; 0.002 -> 0.001 at 1800
         entropy-decay    1.0
         lr               2e-5
         weight-decay     1e-4

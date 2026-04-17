@@ -20,7 +20,7 @@
   {:length  0.8
    :friction 0.1
    :max-speed 10.0
-   :motor 5.0
+   :motor 10.0
    :gravitation 20.0
    :dt (/ 1.0 frame-rate)
    :save false
@@ -29,7 +29,7 @@
    :target-time 1.0
    :angle-weight 1.0
    :velocity-weight 0.1
-   :control-weight 0.01})
+   :control-weight 0.001})
 
 
 (defn setup
