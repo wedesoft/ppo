@@ -23,8 +23,10 @@
 
 (defn tensor
   "Convert nested vector to tensor"
-  [data]
-  (torch/tensor data :dtype torch/float32))
+  ([data]
+   (tensor data torch/float32))
+  ([data dtype]
+   (torch/tensor data :dtype dtype)))
 
 
 (defn tolist

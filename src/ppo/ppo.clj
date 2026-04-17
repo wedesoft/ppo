@@ -7,7 +7,8 @@
                                environment-truncate?)]))
 
 
-(require-python '[torch :as torch])
+(require-python '[torch :as torch]
+                '[builtins :as python])
 
 
 (defn sample-environment
@@ -59,23 +60,15 @@
 (defn shuffle-samples
   "Random shuffle of samples"
   ([samples]
-   (shuffle-samples samples (random-order (count samples))))
+   (shuffle-samples samples (random-order (python/len (first (vals samples))))))
   ([samples indices]
-   (zipmap (keys samples) (map #(mapv % indices) (vals samples)))))
+   (zipmap (keys samples) (map #(torch/index_select % 0 (torch/tensor indices)) (vals samples)))))
 
 
 (defn create-batches
   "Create mini batches from environment samples"
-  [samples batch-size]
-  (apply mapv (fn [& args] (zipmap (keys samples) (map vec args))) (map #(partition-all batch-size %) (vals samples))))
-
-
-(defn sample-shuffle-and-batch
-  "Sample environment, shuffle data, and create batches"
-  ([environment-factory policy size batch-size indices]
-   (create-batches (shuffle-samples (sample-environment environment-factory policy size) indices) batch-size))
-  ([environment-factory policy size batch-size]
-   (create-batches (shuffle-samples (sample-environment environment-factory policy size) (random-order size)) batch-size)))
+  [batch-size samples]
+  (apply mapv (fn [& args] (zipmap (keys samples) args)) (map #(py. % split batch-size) (vals samples))))
 
 
 (defn tensor-batch
@@ -110,11 +103,10 @@
 
 (defn assoc-advantages
   "Associate advantages with batch of samples"
-  [critic gamma lambda]
-  (fn [batch]
-      (let [deltas     (deltas batch critic gamma)
-            advantages (advantages batch deltas gamma lambda)]
-        (assoc batch :advantages advantages))))
+  [critic gamma lambda batch]
+  (let [deltas     (deltas batch critic gamma)
+        advantages (advantages batch deltas gamma lambda)]
+    (assoc batch :advantages advantages)))
 
 
 (defn critic-target
@@ -125,10 +117,9 @@
 
 (defn assoc-critic-target
   "Associate critic target values with batch of samples"
-  [critic]
-  (fn [batch]
-      (let [target (critic-target batch critic)]
-        (assoc batch :critic-target target))))
+  [critic batch]
+  (let [target (critic-target batch critic)]
+    (assoc batch :critic-target target)))
 
 
 (defn normalize-advantages
@@ -141,11 +132,13 @@
 (defn sample-with-advantage-and-critic-target
   "Create batches of samples and add add advantages and critic target values"
   [environment-factory actor critic size batch-size gamma lambda]
-  (->> (sample-shuffle-and-batch environment-factory (indeterministic-act actor) size batch-size)
-       (map (assoc-advantages (fn [observation] (tolist (critic (tensor observation)))) gamma lambda))
-       (map tensor-batch)
-       (map (assoc-critic-target critic))
-       (map normalize-advantages)))
+  (->> (sample-environment environment-factory (indeterministic-act actor) size)
+       (assoc-advantages (fn [observation] (tolist (critic (tensor observation)))) gamma lambda)
+       tensor-batch
+       (assoc-critic-target critic)
+       normalize-advantages
+       shuffle-samples
+       (create-batches batch-size)))
 
 
 (defn probability-ratios

@@ -45,54 +45,27 @@
 
 
 (facts "Random shuffle of samples"
-       (let [samples  {:observations [[101] [102] [103] [104]]
-                       :actions [[1] [2] [3] [4]]
-                       :logprobs [[-1] [-2] [-3] [-4]]
-                       :next-observations [[102] [103] [104] [105]]
-                       :rewards [-4 -3 -2 -1]
-                       :dones [false false false true]
-                       :truncates [false true false false]}
-             shuffled (shuffle-samples samples [0 3 2 1])]
-         (:observations shuffled) => [[101] [104] [103] [102]]
-         (:actions shuffled) => [[1] [4] [3] [2]]
-         (:logprobs shuffled) => [[-1] [-4] [-3] [-2]]
-         (:next-observations shuffled) => [[102] [105] [104] [103]]
-         (:rewards shuffled) => [-4 -1 -2 -3]
-         (:dones shuffled) => [false true false false]
-         (:truncates shuffled) => [false false false true]
-         (:observations shuffled) => vector?))
+       (let [samples  {:observations (tensor [[101.0] [102.0] [103.0] [104.0]])
+                       :actions (tensor [[1.0] [2.0] [3.0] [4.0]])
+                       :logprobs (tensor [[-1.0] [-2.0] [-3.0] [-4.0]])}
+             shuffled (shuffle-samples samples (tensor [0 3 2 1] torch/long))]
+         (tolist (:observations shuffled)) => [[101.0] [104.0] [103.0] [102.0]]
+         (tolist (:actions shuffled)) => [[1.0] [4.0] [3.0] [2.0]]
+         (tolist (:logprobs shuffled)) => [[-1.0] [-4.0] [-3.0] [-2.0]]
+         (shuffle-samples samples) => some?))
 
 
 (facts "Create batches from samples"
-       (let [samples {:observations [[101] [102] [103] [104]]
-                      :actions [[1] [2] [3] [4]]
-                      :logprobs [[-1] [-2] [-3] [-4]]
-                      :next-observations [[102] [103] [104] [105]]
-                      :rewards [-4 -3 -2 -1]
-                      :dones [false false false true]
-                      :truncates [false true false false]}
-             batches (create-batches samples 2)]
-         (:observations (first batches)) => [[101] [102]]
-         (:observations (second batches)) => [[103] [104]]
-         (:actions (first batches)) => [[1] [2]]
-         (:actions (second batches)) => [[3] [4]]
-         (:logprobs (first batches)) => [[-1] [-2]]
-         (:logprobs (second batches)) => [[-3] [-4]]
-         (:next-observations (first batches)) => [[102] [103]]
-         (:next-observations (second batches)) => [[104] [105]]
-         (:rewards (first batches)) => [-4 -3]
-         (:rewards (second batches)) => [-2 -1]
-         (:dones (first batches)) => [false false]
-         (:dones (second batches)) => [false true]
-         (:truncates (first batches)) => [false true]
-         (:truncates (second batches)) => [false false]
-         (:observations (first batches)) => vector?))
-
-
-(facts "Sample, shuffle, and batch"
-       (let [batches (sample-shuffle-and-batch (test-env-factory) (constant-value 1) 4 2 [0 3 2 1])]
-         (:observations (first batches)) => [[101] [104]]
-         (:observations (second batches)) => [[103] [102]]))
+       (let [samples {:observations (tensor [[101.0] [102.0] [103.0] [104.0]])
+                      :actions (tensor [[1.0] [2.0] [3.0] [4.0]])
+                      :logprobs (tensor [[-1.0] [-2.0] [-3.0] [-4.0]])}
+             batches (create-batches 2 samples)]
+         (tolist (:observations (first batches))) => [[101.0] [102.0]]
+         (tolist (:observations (second batches))) => [[103.0] [104.0]]
+         (tolist (:actions (first batches))) => [[1.0] [2.0]]
+         (tolist (:actions (second batches))) => [[3.0] [4.0]]
+         (tolist (:logprobs (first batches))) => [[-1.0] [-2.0]]
+         (tolist (:logprobs (second batches))) => [[-3.0] [-4.0]]))
 
 
 (defn linear-critic [observation] (first observation))
@@ -121,7 +94,7 @@
 
 (facts "Associate advantages with batch of samples"
        (let [batch      {:observations [[4]] :next-observations [[2]] :rewards [2] :dones [false] :truncates [false]}
-             result     ((assoc-advantages (constantly 0) 1.0 1.0) batch)]
+             result     (assoc-advantages (constantly 0) 1.0 1.0 batch)]
          (:observations result) => [[4]]
          (:advantages result) => [2.0]))
 

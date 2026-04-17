@@ -27,16 +27,16 @@
         n-updates        10
         gamma            0.99
         lambda           1.0
-        epsilon          0.1
-        n-batches        16
+        epsilon          0.2
+        n-batches        8
         batch-size       50
         checkpoint       100
-        entropy-factor   (atom 0.002) ; 0.002 -> 0.001 at 1800
-        entropy-decay    1.0
-        lr               2e-5
-        weight-decay     1e-4
+        entropy-factor   (atom 0.1)
+        entropy-decay    0.99
+        lr               2e-4
+        weight-decay     1e-3
         actor-optimizer  (adam-optimizer actor lr weight-decay)
-        critic-optimizer (adam-optimizer critic (* 3 lr) (* 3 weight-decay))]
+        critic-optimizer (adam-optimizer critic lr weight-decay)]
     (when (.exists (java.io.File. "actor.pt"))
       (py. actor load_state_dict (torch/load "actor.pt")))
     (when (.exists (java.io.File. "critic.pt"))
@@ -77,11 +77,3 @@
     (torch/save (py. actor state_dict) "actor.pt")
     (torch/save (py. critic state_dict) "critic.pt")
     (System/exit 0)))
-
-(comment
-  (require '[libpython-clj2.python :refer [py. py.. py.-] :as py])
-  (require '[libpython-clj2.require :refer (require-python)])
-  (require '[ppo.mlp :refer (Actor tensor)])
-  (def actor (Actor 3 10 1))
-  (py. actor load_state_dict (torch/load "actor.pt"))
-)
