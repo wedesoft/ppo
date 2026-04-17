@@ -17,14 +17,13 @@
 
 
 (def config
-  {:length  0.8
-   :friction 0.1
-   :max-speed 10.0
-   :motor 10.0
-   :gravitation 20.0
+  {:length  (/ 2.0 3.0)
+   :max-speed 8.0
+   :motor 6.0
+   :gravitation 10.0
    :dt (/ 1.0 frame-rate)
    :save false
-   :timeout 12.0
+   :timeout 10.0
    :target-angle 0.25
    :target-time 1.0
    :angle-weight 1.0
@@ -61,12 +60,6 @@
     :else 0))
 
 
-(defn friction-acceleration
-  "Angular acceleration due to friction"
-  [friction velocity dt]
-  (* (min friction (/ (abs velocity) dt)) (- (sign velocity))))
-
-
 (defn up-deviation
   "Angular deviation from up angle"
   [angle]
@@ -85,12 +78,11 @@
   "Perform simulation step of pendulum"
   ([state action]
    (update-state state action config))
-  ([{:keys [angle velocity t] :as state} {:keys [control]} {:keys [dt friction motor gravitation length max-speed]}]
-   (let [friction       (friction-acceleration friction velocity dt)
-         gravity        (pendulum-gravity gravitation length angle)
+  ([{:keys [angle velocity t] :as state} {:keys [control]} {:keys [dt motor gravitation length max-speed]}]
+   (let [gravity        (pendulum-gravity gravitation length angle)
          motor          (motor-acceleration control motor)
          t              (+ t dt)
-         acceleration   (+ motor gravity friction)
+         acceleration   (+ motor gravity)
          velocity       (max (- max-speed) (min max-speed (+ velocity (* acceleration dt))))
          angle          (+ angle (* velocity dt))]
      {:angle          angle

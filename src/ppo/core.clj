@@ -29,8 +29,8 @@
         gamma            0.99
         lambda           1.0
         epsilon          0.1
-        batch-size       25
-        n-batches        8
+        n-batches        4
+        batch-size       (/ 200 n-batches)
         checkpoint       100
         entropy-factor   (atom 0.002) ; 0.002 -> 0.001 at 1800
         entropy-decay    1.0
