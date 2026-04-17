@@ -28,7 +28,7 @@
    :target-time 1.0
    :angle-weight 1.0
    :velocity-weight 0.1
-   :control-weight 0.001})
+   :control-weight 0.0001})
 
 
 (defn setup
