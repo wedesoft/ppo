@@ -269,7 +269,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "numpy" },
+    { name = "numpy", index = "https://download.pytorch.org/whl/cpu" },
     { name = "torch", index = "https://download.pytorch.org/whl/cpu" },
 ]
 
