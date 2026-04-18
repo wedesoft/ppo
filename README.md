@@ -20,7 +20,8 @@ Run `uv run clj -M -m ppo.xor` to check things are working.
 ## Run
 
 * Run interactive REPL: `uv run clojure -M:rebel`
-* Run Pendulum: `clj -M -m ppo.pendulum`
+* Train Pendulum: `uv run clj -M -m ppo.core`
+* Run Pendulum: `uv run clj -M -m ppo.pendulum`
 
 # External links
 
