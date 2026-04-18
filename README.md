@@ -23,6 +23,8 @@ Run `uv run clj -M -m ppo.xor` to check things are working.
 * Train Pendulum: `uv run clj -M -m ppo.core`
 * Run Pendulum: `uv run clj -M -m ppo.pendulum`
 
+[![pendulum](pendulum.png)](https://www.youtube.com/watch?v=swzyX_GZ3iw)
+
 # External links
 
 * [John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, Oleg Klimov: Proximal Policy Optimization Algorithms](https://arxiv.org/abs/1707.06347)
