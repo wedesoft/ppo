@@ -177,8 +177,8 @@
       :update (fn [state]
                   (let [observation (observation state config)
                         action      (if (q/mouse-pressed?)
-                                      {:control (- 1.0 (/ (q/mouse-x) (/ (q/width) 2.0)))}
-                                      (or {:control 0.0} (action (tolist (py. actor deterministic_act (tensor observation))))))
+                                      {:control (min 1.0 (max -1.0 (- 1.0 (/ (q/mouse-x) (/ (q/width) 2.0)))))}
+                                      (action (tolist (py. actor deterministic_act (tensor observation)))))
                         reward      (reward state config action)
                         state       (update-state state action)]
                     (when (done? state) (async/close! done-chan))
