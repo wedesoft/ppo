@@ -5,7 +5,6 @@ description = "Proximal Policy Optimization"
 authors = [{ name="Jan Wedekind", email="jan@wedesoft.de" }]
 requires-python = ">=3.10.0"
 dependencies = [
-    "numpy",
     "torch",
 ]
 
