@@ -21,9 +21,9 @@
 
 (defn -main [& _args]
   (let [factory          pendulum-factory
-        actor            (Actor 3 100 1)
-        critic           (Critic 3 100)
-        n-epochs         10000
+        actor            (Actor 3 64 1)
+        critic           (Critic 3 64)
+        n-epochs         100000
         n-updates        10
         gamma            0.99
         lambda           1.0
@@ -32,9 +32,9 @@
         batch-size       50
         checkpoint       100
         entropy-factor   (atom 0.1)
-        entropy-decay    0.99
-        lr               2e-4
-        weight-decay     1e-3
+        entropy-decay    0.999
+        lr               5e-5
+        weight-decay     1e-4
         actor-optimizer  (adam-optimizer actor lr weight-decay)
         critic-optimizer (adam-optimizer critic lr weight-decay)]
     (when (.exists (java.io.File. "actor.pt"))

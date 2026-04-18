@@ -1,6 +1,6 @@
 # Proximal Policy Optimization for Continuous Action Space
 
-A port of the [PPO implementation by XinJingHao](https://github.com/XinJingHao/PPO-Continuous-Pytorch) to Clojure with added environment implementation.
+A port of the [PPO implementation by XinJingHao](https://github.com/XinJingHao/PPO-Continuous-Pytorch) to Clojure with pendulum environment implementation similar to the pendulum from [Gymnasium](https://gymnasium.farama.org/).
 
 ## Installation
 

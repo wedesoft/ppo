@@ -136,13 +136,16 @@
     (reward state config (action input))))
 
 
-(defn draw-state [{:keys [angle]}]
+(defn draw-state [{:keys [angle]} {:keys [control]}]
   (let [origin-x   (/ (q/width) 2)
         origin-y   (/ (q/height) 2)
         length     (* 0.5 (q/height) (:length config))
         pendulum-x (+ origin-x (* length (sin angle)))
         pendulum-y (- origin-y (* length (cos angle)))
-        size       (* 0.05 (q/height))]
+        size       (* 0.05 (q/height))
+        arc-radius (* (abs control) 0.2 (q/height))
+        positive   (pos? control)
+        tip-angle  (if positive 225 -45)]
     (q/frame-rate frame-rate)
     (q/background 255)
     ; set thickness of line
@@ -152,13 +155,19 @@
     (q/line origin-x origin-y pendulum-x pendulum-y)
     (q/stroke-weight 1)
     (q/ellipse pendulum-x pendulum-y size size)
+    (q/no-fill)
+    (q/arc origin-x origin-y (* 2 arc-radius) (* 2 arc-radius) (to-radians -45) (to-radians 225))
+    (q/with-translation [(+ origin-x (* (cos (to-radians tip-angle)) arc-radius)) (+ origin-y (* (sin (to-radians tip-angle)) arc-radius))]
+      (q/with-rotation [(to-radians (if positive 225 -45))]
+        (q/triangle 0 (if positive 10 -10) -5 0 5 0)))
     (when (:save config)
       (q/save-frame "frame-####.png"))))
 
 
 (defn -main [& _args]
-  (let [actor     (Actor 3 100 1)
-        done-chan (async/chan)]
+  (let [actor       (Actor 3 64 1)
+        done-chan   (async/chan)
+        last-action (atom {:control 0.0})]
     (when (.exists (java.io.File. "actor.pt"))
       (py. actor load_state_dict (torch/load "actor.pt")))
     (q/sketch
@@ -169,12 +178,13 @@
                   (let [observation (observation state config)
                         action      (if (q/mouse-pressed?)
                                       {:control (- 1.0 (/ (q/mouse-x) (/ (q/width) 2.0)))}
-                                      (action (tolist (py. actor deterministic_act (tensor observation)))))
+                                      (or {:control 0.0} (action (tolist (py. actor deterministic_act (tensor observation))))))
                         reward      (reward state config action)
                         state       (update-state state action)]
                     (when (done? state) (async/close! done-chan))
+                    (reset! last-action action)
                     state))
-      :draw draw-state
+      :draw #(draw-state % @last-action)
       :middleware [m/fun-mode]
       :on-close (fn [& _] (async/close! done-chan)))
     (async/<!! done-chan))
