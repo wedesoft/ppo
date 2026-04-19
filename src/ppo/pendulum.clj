@@ -24,8 +24,6 @@
    :dt (/ 1.0 frame-rate)
    :save false
    :timeout 10.0
-   :target-angle 0.25
-   :target-time 1.0
    :angle-weight 1.0
    :velocity-weight 0.1
    :control-weight 0.0001})
@@ -49,15 +47,6 @@
   "Angular acceleration from motor"
   [control motor-acceleration]
   (* control motor-acceleration))
-
-
-(defn sign
-  "Get sign of number"
-  [x]
-  (cond
-    (pos? x) 1
-    (neg? x) -1
-    :else 0))
 
 
 (defn normalize-angle

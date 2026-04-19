@@ -14,8 +14,6 @@
    :dt 1.0
    :save false
    :timeout 20.0
-   :target-angle 0.1
-   :target-time 2.0
    :angle-weight 3.0
    :velocity-weight 5.0
    :control-weight 1.0})
@@ -36,14 +34,6 @@
        (motor-acceleration 0.0 0.0) => 0.0
        (motor-acceleration 1.0 3.0) => 3.0
        (motor-acceleration 0.0 3.0) => 0.0)
-
-
-(facts "Test sign of number"
-       (sign 0.0) => 0
-       (sign 1.0) => 1
-       (sign 2.0) => 1
-       (sign -1.0) => -1
-       (sign -2.0) => -1)
 
 
 (facts "Update state"
