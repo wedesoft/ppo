@@ -49,17 +49,11 @@
   (* control motor-acceleration))
 
 
-(defn normalize-angle
-  "Angular deviation from up angle"
-  [angle]
-  (- (mod (+ angle PI) (* 2 PI)) PI))
-
-
 (defn update-state
   "Perform simulation step of pendulum"
   ([state action]
    (update-state state action config))
-  ([{:keys [angle velocity t] :as state} {:keys [control]} {:keys [dt motor gravitation length max-speed]}]
+  ([{:keys [angle velocity t]} {:keys [control]} {:keys [dt motor gravitation length max-speed]}]
    (let [gravity        (pendulum-gravity gravitation length angle)
          motor          (motor-acceleration control motor)
          t              (+ t dt)
@@ -103,9 +97,15 @@
   (* x x))
 
 
+(defn normalize-angle
+  "Angular deviation from up angle"
+  [angle]
+  (- (mod (+ angle PI) (* 2 PI)) PI))
+
+
 (defn reward
   "Reward function"
-  [{:keys [angle velocity] :as state} {:keys [angle-weight velocity-weight control-weight final-reward] :as config} {:keys [control]}]
+  [{:keys [angle velocity]} {:keys [angle-weight velocity-weight control-weight]} {:keys [control]}]
   (- (+ (* angle-weight (sqr (normalize-angle angle)))
         (* velocity-weight (sqr velocity))
         (* control-weight (sqr control)))))
@@ -137,7 +137,6 @@
         tip-angle  (if positive 225 -45)]
     (q/frame-rate frame-rate)
     (q/background 255)
-    ; set thickness of line
     (q/stroke-weight 5)
     (q/stroke 0)
     (q/fill 175)
@@ -168,7 +167,6 @@
                         action      (if (q/mouse-pressed?)
                                       (action (tolist (py. actor deterministic_act (tensor observation))))
                                       {:control (min 1.0 (max -1.0 (- 1.0 (/ (q/mouse-x) (/ (q/width) 2.0)))))})
-                        reward      (reward state config action)
                         state       (update-state state action)]
                     (when (done? state) (async/close! done-chan))
                     (reset! last-action action)
