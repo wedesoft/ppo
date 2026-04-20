@@ -117,9 +117,9 @@
   "Train network for specified number of epochs"
   [optimizer model criterion batches]
   (doseq [[data label] batches]
-         (py. optimizer zero_grad)
          (let [prediction (model data)
                loss       (criterion prediction label)]
+           (py. optimizer zero_grad)
            (py. loss backward)
            (py. optimizer step))))
 
@@ -128,7 +128,7 @@
   "Use critic with Clojure datatypes"
   [critic]
   (fn [observation]
-      (tolist (without-gradient (critic (tensor observation))))))
+      (without-gradient (toitem (critic (tensor observation))))))
 
 
 (defn indeterministic-act
