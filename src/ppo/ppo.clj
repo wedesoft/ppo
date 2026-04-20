@@ -2,7 +2,8 @@
     (:require
       [libpython-clj2.require :refer (require-python)]
       [libpython-clj2.python :refer (py.) :as py]
-      [ppo.mlp :refer (tensor tolist logprob-of-action without-gradient mse-loss indeterministic-act entropy-of-distribution)]
+      [ppo.mlp :refer (tensor logprob-of-action without-gradient mse-loss indeterministic-act entropy-of-distribution
+                       critic-observation)]
       [ppo.environment :refer (environment-observation environment-update environment-reward environment-done?
                                environment-truncate?)]))
 
@@ -133,7 +134,7 @@
   "Create batches of samples and add add advantages and critic target values"
   [environment-factory actor critic size batch-size gamma lambda]
   (->> (sample-environment environment-factory (indeterministic-act actor) size)
-       (assoc-advantages (fn [observation] (tolist (critic (tensor observation)))) gamma lambda)
+       (assoc-advantages (critic-observation critic) gamma lambda)
        tensor-batch
        (assoc-critic-target critic)
        normalize-advantages

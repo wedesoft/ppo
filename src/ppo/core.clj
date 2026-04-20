@@ -3,7 +3,7 @@
     (:require [clojure.math :refer (PI cos sqrt)]
               [libpython-clj2.require :refer (require-python)]
               [libpython-clj2.python :refer (py.) :as py]
-              [ppo.mlp :refer (Actor Critic adam-optimizer tolist tensor without-gradient entropy-of-distribution)]
+              [ppo.mlp :refer (Actor Critic adam-optimizer tolist toitem tensor without-gradient entropy-of-distribution)]
               [ppo.ppo :refer (sample-with-advantage-and-critic-target actor-loss critic-loss)]
               [ppo.pendulum :refer (->Pendulum config setup action)]))
 
@@ -53,13 +53,13 @@
                              (py. loss backward)
                              (utils/clip_grad_norm_(py. actor parameters) 0.5)
                              (py. actor-optimizer step)
-                             (swap! smooth-actor-loss (fn [x] (+ (* 0.95 x) (* 0.05 (tolist loss))))) ))
+                             (swap! smooth-actor-loss (fn [x] (+ (* 0.95 x) (* 0.05 (toitem loss))))) ))
                     (doseq [batch samples]
                            (let [loss (critic-loss batch critic)]
                              (py. critic-optimizer zero_grad)
                              (py. loss backward)
                              (py. critic-optimizer step)
-                             (swap! smooth-critic-loss (fn [x] (+ (* 0.95 x) (* 0.05 (tolist loss))))))))
+                             (swap! smooth-critic-loss (fn [x] (+ (* 0.95 x) (* 0.05 (toitem loss))))))))
              (println "Epoch:" epoch
                       "Actor Loss:" @smooth-actor-loss
                       "Critic Loss:" @smooth-critic-loss
@@ -68,7 +68,7 @@
              (doseq [input [[1 0 -1.0] [1 0 1.0] [0 -1 -1.0] [0 -1 1.0] [0 1 -1.0] [0 1 1.0] [-1 0 -1.0] [-1 0 1.0]]]
                     (println input
                              "->" (action (tolist (py. actor deterministic_act (tensor input))))
-                             "entropy" (tolist (entropy-of-distribution actor (tensor input))))))
+                             "entropy" (toitem (entropy-of-distribution actor (tensor input))))))
            (swap! entropy-factor * entropy-decay)
            (when (= (mod epoch checkpoint) (dec checkpoint))
              (println "Saving models")
