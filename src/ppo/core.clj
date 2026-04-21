@@ -35,6 +35,8 @@
         entropy-decay    0.999
         lr               5e-5
         weight-decay     1e-4
+        smooth-actor-loss  (atom 0.0)
+        smooth-critic-loss (atom 0.0)
         actor-optimizer  (adam-optimizer actor lr weight-decay)
         critic-optimizer (adam-optimizer critic lr weight-decay)]
     (when (.exists (java.io.File. "actor.pt"))
@@ -42,9 +44,7 @@
     (when (.exists (java.io.File. "critic.pt"))
       (py. critic load_state_dict (torch/load "critic.pt")))
     (doseq [epoch (range n-epochs)]
-           (let [smooth-actor-loss  (atom 0.0)
-                 smooth-critic-loss (atom 0.0)
-                 samples         (sample-with-advantage-and-critic-target factory actor critic (* batch-size n-batches)
+           (let [samples         (sample-with-advantage-and-critic-target factory actor critic (* batch-size n-batches)
                                                                           batch-size gamma lambda)]
              (doseq [k (range n-updates)]
                     (doseq [batch samples]
@@ -53,13 +53,13 @@
                              (py. loss backward)
                              (utils/clip_grad_norm_(py. actor parameters) 0.5)
                              (py. actor-optimizer step)
-                             (swap! smooth-actor-loss (fn [x] (+ (* 0.95 x) (* 0.05 (toitem loss))))) ))
+                             (swap! smooth-actor-loss (fn [x] (+ (* 0.999 x) (* 0.001 (toitem loss))))) ))
                     (doseq [batch samples]
                            (let [loss (critic-loss batch critic)]
                              (py. critic-optimizer zero_grad)
                              (py. loss backward)
                              (py. critic-optimizer step)
-                             (swap! smooth-critic-loss (fn [x] (+ (* 0.95 x) (* 0.05 (toitem loss))))))))
+                             (swap! smooth-critic-loss (fn [x] (+ (* 0.999 x) (* 0.001 (toitem loss))))))))
              (println "Epoch:" epoch
                       "Actor Loss:" @smooth-actor-loss
                       "Critic Loss:" @smooth-critic-loss
