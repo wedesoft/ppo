@@ -23,7 +23,7 @@ Run `uv run clj -M -m ppo.xor` to check things are working.
 * Train Pendulum: `uv run clj -M -m ppo.core`
 * Run Pendulum: `uv run clj -M -m ppo.pendulum`
 
-[![pendulum](pendulum.png)](https://www.youtube.com/watch?v=swzyX_GZ3iw)
+[![pendulum](pendulum.gif)](https://www.youtube.com/watch?v=swzyX_GZ3iw)
 
 # External links
 

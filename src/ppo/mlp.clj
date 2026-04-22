@@ -132,7 +132,7 @@
 
 
 (defn indeterministic-act
-  "Sample action using actor network returning distribution"
+  "Sample action using actor network returning random action and log-probability"
   [actor]
   (fn indeterministic-act-with-actor [observation]
       (without-gradient
